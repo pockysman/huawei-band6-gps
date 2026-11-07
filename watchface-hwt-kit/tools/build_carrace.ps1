@@ -197,55 +197,66 @@ public class CarRaceHwt {
                 Txt(g, "TIME", 7.5f, ink, 155, 46);
                 Txt(g, "SEC", 7.5f, ink, 155, 112);
                 using (var ul = new Pen(ink, 1.5f)) g.DrawLine(ul, 154, 144, 174, 144);
-                using (var sep = new Pen(Color.FromArgb(90, INK), 1f)) g.DrawLine(sep, 9, 181, 185, 181);
+                
 
-                // ---- Race track (trapezoid) y 186..286 ----
-                PointF[] trap = { new PointF(9, 286), new PointF(36, 187), new PointF(150, 187), new PointF(185, 286) };
-                using (var tf = new SolidBrush(Color.FromArgb(140, 120, 190, 176))) g.FillPolygon(tf, trap);
-                using (var tp = new Pen(ink, 1.8f)) g.DrawPolygon(tp, trap);
-
-                // speed scale + car, kept inside left half (x < 96)
-                PointF[] scale = { new PointF(22, 280), new PointF(60, 280), new PointF(88, 200), new PointF(81, 200), new PointF(55, 272), new PointF(25, 272) };
-                using (var sp = new Pen(ink, 1.4f)) g.DrawPolygon(sp, scale);
-                Txt(g, "300", 7f, ink, 62, 197);
-                Txt(g, "250", 7f, ink, 54, 216);
-                Txt(g, "50 100 150", 6.5f, ink, 20, 260);
-                g.FillRectangle(inkBrush, 30, 240, 22, 7);
-                g.FillRectangle(inkBrush, 36, 235, 10, 5);
-                g.FillRectangle(inkBrush, 27, 242, 3, 3);
-                g.FillEllipse(inkBrush, 31, 245, 6, 6);
-                g.FillEllipse(inkBrush, 45, 245, 6, 6);
-
-                // stats labels; digits are right-aligned to x=170 at y=188/224/260
-                using (var div = new Pen(Color.FromArgb(110, INK), 1f)) g.DrawLine(div, 98, 192, 98, 280);
-                Txt(g, "STEP", 7.5f, ink, 103, 192);
-                Txt(g, "PULSE", 7.5f, ink, 103, 228);
-                Txt(g, "KCAL", 7.5f, ink, 103, 264);
-                using (var ln = new Pen(Color.FromArgb(80, INK), 1f)) {
-                    g.DrawLine(ln, 103, 215, 176, 215);
-                    g.DrawLine(ln, 103, 251, 180, 251);
+                // ---- Middle Rectangular LCD Telemetry Box (x 10..184, y 182..282) ----
+                var teleBox = new RectangleF(10, 180, 174, 102);
+                using (var tp = RoundRect(teleBox, 5))
+                using (var tf = new SolidBrush(Color.FromArgb(22, INK)))
+                using (var te = new Pen(ink, 1.5f)) {
+                    g.FillPath(tf, tp);
+                    g.DrawPath(te, tp);
                 }
 
-                // ---- GPS HUD panel (links to the Band 6 GPS HUD phone app) y 294..358 ----
-                var pr = new RectangleF(10, 294, 174, 62);
-                using (var pp = RoundRect(pr, 6))
-                using (var pf = new SolidBrush(Color.FromArgb(28, INK)))
-                using (var pe = new Pen(ink, 1.4f)) { g.FillPath(pf, pp); g.DrawPath(pe, pp); }
-                // checkered flag icon
-                for (int fy = 0; fy < 3; fy++)
-                    for (int fx = 0; fx < 4; fx++)
-                        if ((fx + fy) % 2 == 0) g.FillRectangle(inkBrush, 18 + fx * 4, 302 + fy * 4, 4, 4);
-                using (var fp = new Pen(ink, 1f)) { g.DrawRectangle(fp, 18, 302, 16, 12); g.DrawLine(fp, 18, 302, 18, 322); }
-                Txt(g, "GPS HUD", 13f, ink, 40, 300);
-                Txt(g, "NAV  SPEED  ODO", 7f, inkSoft, 41, 316);
-                using (var ln2 = new Pen(Color.FromArgb(80, INK), 1f)) g.DrawLine(ln2, 16, 330, 178, 330);
-                // music-control hint: prev / play / next
-                g.FillPolygon(inkBrush, new PointF[] { new PointF(26, 336), new PointF(19, 341), new PointF(26, 346) });
-                g.FillRectangle(inkBrush, 17, 336, 2, 10);
-                g.FillPolygon(inkBrush, new PointF[] { new PointF(36, 336), new PointF(43, 341), new PointF(36, 346) });
-                g.FillPolygon(inkBrush, new PointF[] { new PointF(50, 336), new PointF(57, 341), new PointF(50, 346) });
-                g.FillRectangle(inkBrush, 57, 336, 2, 10);
-                Txt(g, "Live di menu MUSIK", 8f, ink, 66, 335);
+                // Left mini gauge column (x 10..86): Retro LCD Speed Bars + Race Car
+                using (var div = new Pen(ink, 1.2f)) g.DrawLine(div, 86, 180, 86, 282);
+                Txt(g, "RPM / SPD", 6.5f, ink, 16, 187);
+                int[] barWidths = { 54, 46, 38, 30, 22, 14 };
+                for (int bi = 0; bi < barWidths.Length; bi++) {
+                    float by = 200 + bi * 8;
+                    int bw = barWidths[bi];
+                    using (var barBrush = new SolidBrush(bi < 2 ? Color.FromArgb(45, INK) : ink))
+                        g.FillRectangle(barBrush, 16, by, bw, 5);
+                }
+                // Crisp pixel race car at bottom-left of telemetry box (y 254..276)
+                g.FillRectangle(inkBrush, 24, 260, 32, 8);
+                g.FillRectangle(inkBrush, 32, 254, 14, 6);
+                g.FillRectangle(inkBrush, 19, 262, 5, 4);
+                g.FillEllipse(inkBrush, 26, 266, 8, 8);
+                g.FillEllipse(inkBrush, 45, 266, 8, 8);
+
+                // Right column (x 86..184): 3 neat rows for STEP (y=188), PULSE (y=224), KCAL (y=260)
+                using (var ln = new Pen(Color.FromArgb(100, INK), 1f)) {
+                    g.DrawLine(ln, 86, 214, 184, 214);
+                    g.DrawLine(ln, 86, 248, 184, 248);
+                }
+                for (int gi = 0; gi < 5; gi++) {
+                    DrawSevenSeg(g, new RectangleF(170 - (5 - gi) * 8 + 0.6f, 188.8f, 6.8f, 13.4f), 1.6f, 8, ghost, null);
+                    DrawSevenSeg(g, new RectangleF(170 - (5 - gi) * 8 + 0.6f, 224.8f, 6.8f, 13.4f), 1.6f, 8, ghost, null);
+                    DrawSevenSeg(g, new RectangleF(170 - (5 - gi) * 8 + 0.6f, 260.8f, 6.8f, 13.4f), 1.6f, 8, ghost, null);
+                }
+                Txt(g, "STEP", 7.5f, ink, 91, 191);
+                Txt(g, "PULSE", 7.5f, ink, 91, 227);
+                Txt(g, "KCAL", 7.5f, ink, 91, 263);
+
+                // ---- Bottom Iconic Casio GD-8 Teal Trapezoid (x 10..184, y 290..356) ----
+                PointF[] trap = { new PointF(10, 356), new PointF(32, 290), new PointF(162, 290), new PointF(184, 356) };
+                using (var tf = new SolidBrush(Color.FromArgb(155, 116, 188, 174))) g.FillPolygon(tf, trap);
+                using (var tp = new Pen(ink, 2f)) g.DrawPolygon(tp, trap);
+
+                // Authentic stepped speed ramp on left of trapezoid
+                PointF[] scale = { new PointF(22, 350), new PointF(68, 350), new PointF(90, 298), new PointF(83, 298), new PointF(63, 343), new PointF(25, 343) };
+                using (var sp = new Pen(ink, 1.5f)) g.DrawPolygon(sp, scale);
+                Txt(g, "300", 7f, ink, 63, 296);
+                Txt(g, "250", 7f, ink, 55, 312);
+                Txt(g, "ALM", 7.5f, ink, 30, 314);
+                Txt(g, "50 100 150", 6.5f, ink, 22, 330);
+
+                // Right side of trapezoid: GPS HUD + SIG km + bottom bar (faithful to GD-8)
+                Txt(g, "GPS HUD", 9.5f, ink, 96, 300);
+                Txt(g, "SIG", 7f, ink, 146, 318);
+                Txt(g, "km", 11f, ink, 142, 327, false, FontStyle.Bold | FontStyle.Italic);
+                g.FillRectangle(inkBrush, 74, 347, 98, 3);
             }
 
             bmp.Save(path, ImageFormat.Png);
@@ -384,3 +395,4 @@ $work = "$env:TEMP\band6_carrace_work"
 if (Test-Path $work) { Remove-Item $work -Recurse -Force }
 [CarRaceHwt]::Build($work, $proto, "$kitDir\CarRace_GD6_Band6.hwt", "$kitDir\CarRace_GD6_preview.png")
 Get-Item "$kitDir\CarRace_GD6_Band6.hwt", "$kitDir\CarRace_GD6_preview.png" | Select-Object Name, Length
+

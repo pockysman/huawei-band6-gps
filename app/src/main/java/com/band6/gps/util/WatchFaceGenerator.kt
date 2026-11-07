@@ -123,51 +123,68 @@ object WatchFaceGenerator {
         // Anotasi area jam (jam digambar oleh Huawei Health)
         text("TIME", 8f, 155f, 54f)
         text("ALM", 8f, 11f, 54f)
-        c.drawLine(9f, 181f, 185f, 181f, inkLine)
 
-        // Lintasan trapesium
-        val trap = Path().apply { moveTo(9f, 286f); lineTo(36f, 187f); lineTo(150f, 187f); lineTo(185f, 286f); close() }
-        c.drawPath(trap, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.argb(140, 120, 190, 176) })
-        c.drawPath(trap, Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 1.8f; color = LCD_INK })
-        val scale = Path().apply {
-            moveTo(22f, 280f); lineTo(60f, 280f); lineTo(88f, 200f); lineTo(81f, 200f); lineTo(55f, 272f); lineTo(25f, 272f); close()
+        // Kotak Telemetri Persegi Panjang yang Rapi (x 10..184, y 180..282)
+        val teleBox = RectF(10f, 180f, 184f, 282f)
+        c.drawRoundRect(teleBox, 5f, 5f, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = LCD_INK; alpha = 22 })
+        c.drawRoundRect(teleBox, 5f, 5f, Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 1.5f; color = LCD_INK })
+
+        // Kolom Kiri (x 10..86): Bar Kecepatan Retro + Mobil Balap
+        c.drawLine(86f, 180f, 86f, 282f, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = LCD_INK; strokeWidth = 1.2f })
+        text("RPM / SPD", 6.5f, 16f, 193f)
+        val barWidths = intArrayOf(54, 46, 38, 30, 22, 14)
+        for (bi in barWidths.indices) {
+            val by = 200f + bi * 8f
+            val bw = barWidths[bi].toFloat()
+            val barPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                color = LCD_INK
+                alpha = if (bi < 2) 45 else 255
+            }
+            c.drawRect(16f, by, 16f + bw, by + 5f, barPaint)
         }
-        c.drawPath(scale, Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 1.4f; color = LCD_INK })
-        text("300", 7f, 62f, 204f); text("250", 7f, 54f, 223f); text("50 100 150", 6.5f, 20f, 267f)
-        c.drawRect(30f, 240f, 52f, 247f, ink); c.drawRect(36f, 235f, 46f, 240f, ink); c.drawRect(27f, 242f, 30f, 245f, ink)
-        c.drawCircle(34f, 248f, 3f, ink); c.drawCircle(48f, 248f, 3f, ink)
-        c.drawLine(98f, 192f, 98f, 280f, inkLine)
+        // Mobil balap di kiri bawah kotak telemetri
+        c.drawRect(24f, 260f, 56f, 268f, ink)
+        c.drawRect(32f, 254f, 46f, 260f, ink)
+        c.drawRect(19f, 262f, 24f, 266f, ink)
+        c.drawCircle(30f, 270f, 4f, ink)
+        c.drawCircle(49f, 270f, 4f, ink)
 
-        // Data GPS dari aplikasi
-        text("MAX km/j", 7f, 103f, 199f)
-        drawLcdNumber(c, snapshot.maxSpeedKmh.roundToInt().toString(), 180f, 202f, 9f, 13f, 2f, 22)
-        c.drawLine(103f, 220f, 180f, 220f, inkLine)
+        // Kolom Kanan (x 86..184): 3 Baris Rapi (MAX km/j, ODO km, ALT m)
+        c.drawLine(86f, 214f, 184f, 214f, inkLine)
+        c.drawLine(86f, 248f, 184f, 248f, inkLine)
+
+        text("MAX", 7.5f, 91f, 201f)
+        drawLcdNumber(c, snapshot.maxSpeedKmh.roundToInt().toString().padStart(5, ' '), 176f, 190f, 7f, 13f, 1.8f, 26)
+
         val odoKm = String.format(Locale.US, "%.1f", snapshot.tripDistanceMeters / 1000.0)
-        text("ODO km", 7f, 103f, 233f)
-        drawLcdNumber(c, odoKm.replace(".", ""), 180f, 236f, 9f, 13f, 2f, 22)
-        c.drawRect(180f - (9f + 1.8f) * 1 - 2.5f, 247f, 180f - (9f + 1.8f) * 1 - 0.5f, 249f, ink) // titik desimal
-        c.drawLine(103f, 254f, 180f, 254f, inkLine)
-        text("ALT m", 7f, 103f, 267f)
-        drawLcdNumber(c, snapshot.altitudeMeters.roundToInt().toString(), 180f, 270f, 9f, 13f, 2f, 22)
+        text("ODO", 7.5f, 91f, 235f)
+        drawLcdNumber(c, odoKm.replace(".", "").padStart(5, ' '), 176f, 224f, 7f, 13f, 1.8f, 26)
 
-        // Panel GPS HUD
-        val panel = RectF(10f, 294f, 184f, 356f)
-        c.drawRoundRect(panel, 6f, 6f, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = LCD_INK; alpha = 28 })
-        c.drawRoundRect(panel, 6f, 6f, Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 1.4f; color = LCD_INK })
-        for (fy in 0 until 3) for (fx in 0 until 4) if ((fx + fy) % 2 == 0) {
-            c.drawRect(18f + fx * 4, 302f + fy * 4, 22f + fx * 4, 306f + fy * 4, ink)
+        text("ALT", 7.5f, 91f, 269f)
+        drawLcdNumber(c, snapshot.altitudeMeters.roundToInt().toString().padStart(5, ' '), 176f, 258f, 7f, 13f, 1.8f, 26)
+
+        // Trapesium Teal Ikonik Casio GD-8 di Bagian Bawah (x 10..184, y 290..356)
+        val trap = Path().apply { moveTo(10f, 356f); lineTo(32f, 290f); lineTo(162f, 290f); lineTo(184f, 356f); close() }
+        c.drawPath(trap, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = Color.argb(155, 116, 188, 174) })
+        c.drawPath(trap, Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 2f; color = LCD_INK })
+
+        val scale = Path().apply {
+            moveTo(22f, 350f); lineTo(68f, 350f); lineTo(90f, 298f); lineTo(83f, 298f); lineTo(63f, 343f); lineTo(25f, 343f); close()
         }
-        text("GPS HUD", 13f, 40f, 313f)
-        text("NAV  SPEED  ODO", 7f, 41f, 324f, alpha = 150)
-        c.drawLine(16f, 330f, 178f, 330f, inkLine)
-        text("Live di menu MUSIK", 8f, 66f, 345f)
-        val tri = Path().apply {
-            moveTo(26f, 336f); lineTo(19f, 341f); lineTo(26f, 346f); close()
-            moveTo(36f, 336f); lineTo(43f, 341f); lineTo(36f, 346f); close()
-            moveTo(50f, 336f); lineTo(57f, 341f); lineTo(50f, 346f); close()
+        c.drawPath(scale, Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = 1.5f; color = LCD_INK })
+        text("300", 7f, 63f, 304f)
+        text("250", 7f, 55f, 320f)
+        text("ALM", 7.5f, 30f, 322f)
+        text("50 100 150", 6.5f, 22f, 338f)
+
+        text("GPS HUD", 9.5f, 96f, 310f)
+        text("SIG", 7f, 146f, 325f)
+        val kmPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            color = LCD_INK; textSize = 11f
+            typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD_ITALIC)
         }
-        c.drawPath(tri, ink)
-        c.drawRect(17f, 336f, 19f, 346f, ink); c.drawRect(57f, 336f, 59f, 346f, ink)
+        c.drawText("km", 142f, 338f, kmPaint)
+        c.drawRect(74f, 347f, 172f, 350f, ink)
         return bmp
     }
 
