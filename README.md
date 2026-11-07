@@ -1,29 +1,119 @@
-# Huawei Band 6 • GPS HUD & Turn-by-Turn Companion
+<div align="center">
 
-Aplikasi Android ringan (Kotlin) yang menyulap **Huawei Band 6** Anda menjadi layar **GPS Navigasi Arah (Google Maps/Waze) + Speedometer Live** menggunakan 2 jalur pintar sekaligus:
+<img src="app/src/main/ic_launcher-playstore.png" width="130" alt="Band 6 GPS HUD Logo" />
 
-1. **Live HUD via Layar Kontrol Musik (`MediaSession`) — Tanpa Getar Terus-Menerus!**
-   Saat Anda membuka menu **Musik** di Huawei Band 6, baris *Judul Lagu* dan *Nama Artis* digantikan secara *real-time* oleh instruksi belokan, kecepatan (`km/jam`), arah kompas, dan jarak tempuh!
-   - Tekan tombol **Next (`⏭️`)** atau **Prev (`⏮️`)** langsung dari layar Huawei Band 6 untuk berpindah antar **3 Mode Layar**:
-     - **Mode 1 (Navigasi + Speed):** `⬅️ 150 m • 42 km/j` / `Jl. Jend. Sudirman (14:30)`
-     - **Mode 2 (Speedometer & Odometer):** `⚡ 42 km/j (Maks 68)` / `📏 3.42 km • 🧭 TL • ⛰️ 120m`
-     - **Mode 3 (Koordinat & Akurasi GPS):** `📍 -6.20876, 106.84560` / `🎯 ±4m • ⚡ 42 km/j • 🧭 U`
-   - Tekan tombol **Play/Pause (`⏯️`)** di Huawei Band 6 untuk mengirim *popup* detail lengkap ke layar jam.
+# Huawei Band 6 • GPS HUD & Retro Car Race Watch Face
 
-2. **Notifikasi Getar Pintar Saat Mendekati Belokan (`NotificationListener`)**
-   Aplikasi secara otomatis membaca arah navigasi dari **Google Maps / Waze** dan mengirimkan notifikasi bergetar ke Huawei Band 6 **hanya saat arah belokan berubah**, mencapai jarak kritis (`200m`, `100m`, `50m`), atau saat Anda melewati batas kecepatan (`80 km/jam`).
+**Aplikasi Pendamping Navigasi GPS (Google Maps / Waze), Speedometer Live & Kustomisasi UI Watch Face (`194×368`) untuk Huawei Band 6 / Honor Band 6**
+
+[![Release](https://img.shields.io/github/v/release/pockysman/huawei-band6-gps?color=FF6B2C&label=Download%20Release&style=for-the-badge)](https://github.com/pockysman/huawei-band6-gps/releases/latest)
+[![Platform](https://img.shields.io/badge/Android-8.0%2B%20(Kotlin)-3FB950?style=for-the-badge&logo=android)](https://github.com/pockysman/huawei-band6-gps/releases/latest)
+[![Device](https://img.shields.io/badge/Huawei%20Band%206-194x368%20(HWHD07)-1F6FEB?style=for-the-badge)](https://github.com/pockysman/huawei-band6-gps/releases/latest)
+
+</div>
 
 ---
 
-## Cara Build Menjadi File `.APK`
+## 📸 Pratinjau Tampilan Watch Face (`194×368` Piksel)
 
-### Opsi A: Menggunakan Android Studio (Lokal)
-1. Buka **Android Studio** -> pilih **Open** -> arahkan ke folder `C:\Users\erlan\.gemini\antigravity\scratch\huawei-band6-gps`.
-2. Tunggu proses *Gradle Sync* selesai.
-3. Pilih menu **Build -> Build Bundle(s) / APK(s) -> Build APK(s)**.
-4. Instal file `app-debug.apk` ke HP Android Anda.
+| **Retro Car Race LCD (`CarRace_GD6_Band6.hwt`)** | **Garmin Tactical Orange** | **Cyber Telemetry Cyan** | **NightOps Radar Green** |
+| :---: | :---: | :---: | :---: |
+| <img src="watchface-hwt-kit/CarRace_GD6_preview.png" width="165" /> | <img src="watchface-hwt-kit/gallery-ready-194x368/01_Garmin_Tactical_Orange.png" width="165" /> | <img src="watchface-hwt-kit/gallery-ready-194x368/02_Cyber_Telemetry_Cyan.png" width="165" /> | <img src="watchface-hwt-kit/gallery-ready-194x368/03_NightOps_Radar_Green.png" width="165" /> |
+| *Terinspirasi Casio GD-8 Car Race* | *Gaya Cockpit Aviasi / Taktis* | *Gaya Speedometer F1 / Cyber* | *Gaya Radar Malam Hari* |
 
-### Opsi B: Tanpa Install Android Studio (Otomatis via GitHub Cloud)
-Proyek ini sudah dilengkapi dengan konfigurasi [build-apk.yml](.github/workflows/build-apk.yml):
-1. Upload folder ini ke repositori GitHub Anda.
-2. Buka tab **Actions** di GitHub -> klik workflow **Build Band 6 GPS HUD APK** -> unduh file `HuaweiBand6-GPS-HUD-apk` yang sudah siap diinstal di HP!
+---
+
+## 🚀 Unduh Langsung (GitHub Releases)
+
+Silakan unduh file siap pakai melalui halaman **[GitHub Releases Resmi](https://github.com/pockysman/huawei-band6-gps/releases/latest)**:
+
+| File | Kegunaan | Link Unduh |
+| :--- | :--- | :---: |
+| 📱 **`HuaweiBand6-GPS-HUD-v1.2.apk`** | Aplikasi Android utama (Navigasi GPS, Speedometer, Studio Watch Face & Eksportir `.hwt`) | **[Unduh APK](https://github.com/pockysman/huawei-band6-gps/releases/latest/download/HuaweiBand6-GPS-HUD-v1.2.apk)** |
+| ⌚ **`CarRace_GD6_Band6.hwt`** | File Custom Watch Face **Retro Car Race LCD** (`HWHD07` v2.1.1) | **[Unduh .HWT](https://github.com/pockysman/huawei-band6-gps/releases/latest/download/CarRace_GD6_Band6.hwt)** |
+| ⌚ **`GPS_Cockpit_Cyan_Band6.hwt`** | File Custom Watch Face **Cyber Telemetry Cyan** (`HWHD07` v2.1.1) | **[Unduh .HWT](https://github.com/pockysman/huawei-band6-gps/releases/latest/download/GPS_Cockpit_Cyan_Band6.hwt)** |
+
+---
+
+## ✨ Fitur Utama
+
+### 1. Live GPS HUD di Layar Kontrol Musik (`MediaSession`) — *Tanpa Getaran Berisik*
+Huawei Band 6 tidak mendukung instalasi aplikasi pihak ketiga secara langsung di dalam memori gelang. Proyek ini menyulap menu **Kontrol Musik** di Huawei Band 6 menjadi layar **Live HUD GPS** yang diperbarui setiap detik tanpa menggetarkan gelang terus-menerus:
+* **Interaktif 2 Arah dari Pergelangan Tangan:** Tekan tombol **Next (`⏭️`)** atau **Prev (`⏮️`)** di layar Huawei Band 6 untuk berpindah antar **4 Mode Layar HUD**:
+  1. **Mode 1 — Navigasi + Speed:** `⬅️ 150 m • 42 km/j` | `Jl. Jend. Sudirman (14:30)`
+  2. **Mode 2 — Visual Bar & Tachometer:** `⚡42 [████░░░░]` | `.. B | [BL 315°] | U ..`
+  3. **Mode 3 — Speedometer & Odometer:** `⚡ 42 km/j (Maks 68)` | `📏 3.42 km • 🧭 TL • ⛰️ 120m`
+  4. **Mode 4 — Koordinat & Akurasi GPS:** `📍 -6.20876, 106.84560` | `🎯 ±4m • ⚡ 42 km/j • 🧭 U`
+* Tekan tombol **Play/Pause (`⏯️`)** di Huawei Band 6 kapan saja untuk memunculkan *popup* detail navigasi lengkap di layar gelang.
+
+### 2. Getaran Pintar Saat Mendekati Belokan (`NotificationListener`)
+* Membaca notifikasi navigasi aktif dari **Google Maps** dan **Waze** secara otomatis (`⬅️`, `➡️`, `⬆️`, `↩️`, `🔄`, `🏁`).
+* Dilengkapi fitur *Smart Anti-Spam Cooldown*: gelang **hanya bergetar** ketika instruksi belokan berubah, menyentuh jarak kritis (`200m`, `150m`, `100m`, `50m`, `30m`, `15m`), atau saat kecepatan kendaraan Anda melewati batas aman (`80 km/jam`).
+
+### 3. Studio Custom Watch Face Terintegrasi (`194×368` Piksel)
+Di dalam aplikasi Android tersedia fitur **Studio Custom Watch Face** dengan 2 metode pemasangan ke Huawei Band 6:
+* **Metode A (Resmi Tanpa Mod via Huawei Health Gallery):** Menyimpan gambar `194×368` bertema **Retro Car Race LCD** (lengkap dengan cetakan data rekor kecepatan maksimum `MAX km/j`, odometer `ODO km`, dan ketinggian `ALT m` dari perjalanan Anda) langsung ke Galeri HP.
+* **Metode B (File `.HWT` Biner Penuh `HWHD07`):** Mengekspor file `CarRace_GD6_Band6.hwt` langsung ke folder `Download` HP untuk dipasang menggunakan **Gadgetbridge** atau **Huawei Health Mod**.
+
+---
+
+## 🛠️ Panduan Pemasangan & Penggunaan
+
+### Langkah 1: Konfigurasi Aplikasi Android & Huawei Health
+1. Unduh dan instal **[`HuaweiBand6-GPS-HUD-v1.2.apk`](https://github.com/pockysman/huawei-band6-gps/releases/latest/download/HuaweiBand6-GPS-HUD-v1.2.apk)** di HP Android Anda.
+2. Buka aplikasi **Band 6 GPS HUD**, lalu berikan izin **Lokasi (GPS)** dan **Notifikasi**.
+3. Ketuk tombol biru **"🔔 Berikan Izin Baca Rute Google Maps (Wajib)"**, lalu aktifkan izin untuk **Band 6 Google Maps Reader**.
+4. Buka aplikasi **Huawei Health** di HP Anda:
+   * Masuk ke menu **Perangkat (Devices)** $\rightarrow$ **Huawei Band 6** $\rightarrow$ **Notifikasi (Notifications)** $\rightarrow$ centang aplikasi **Band 6 GPS HUD**.
+   * Masuk ke **Pengaturan Perangkat (Device Settings)** $\rightarrow$ pastikan **Kontrol Musik (Music Control)** sudah diaktifkan.
+5. Kembali ke aplikasi **Band 6 GPS HUD**, ketuk **"🚀 AKTIFKAN GPS HUD KE HUAWEI BAND 6"**, lalu ketuk **"🧪 Simulasi Belokan Maps + Tes Getar Band 6"** untuk menguji getaran navigasi di gelang Anda.
+
+### Langkah 2: Memasang Custom Watch Face "Retro Car Race LCD"
+* **Cara Resmi (Tanpa Mod/Root):**
+  1. Di bagian bawah aplikasi **Band 6 GPS HUD**, ketuk tombol kuning **"💾 SIMPAN WATCH FACE (194×368) KE GALERI HP"**.
+  2. Buka aplikasi **Huawei Health** $\rightarrow$ **Perangkat** $\rightarrow$ **Watch Faces** $\rightarrow$ pilih **Gallery (Galeri)**.
+  3. Pilih gambar **Car Race LCD** yang baru disimpan, atur posisi jam di area atas, lalu tekan **Save**.
+* **Cara File `.HWT` Penuh (Gadgetbridge / Huawei Health Mod):**
+  1. Ketuk tombol hijau **"📦 EKSPOR FILE .HWT (CAR RACE LCD) KE DOWNLOAD HP"** di dalam aplikasi (atau unduh [`CarRace_GD6_Band6.hwt`](https://github.com/pockysman/huawei-band6-gps/releases/latest/download/CarRace_GD6_Band6.hwt)).
+  2. Buka file `.hwt` tersebut menggunakan **Gadgetbridge** atau fitur *Add Watch Face* pada **Huawei Health Mod**.
+
+---
+
+## 📂 Struktur Repositori
+
+```text
+huawei-band6-gps/
+├── app/src/main/
+│   ├── assets/
+│   │   └── CarRace_GD6_Band6.hwt              # Bundel Watch Face .HWT (HWHD07 v2.1.1)
+│   ├── java/com/band6/gps/
+│   │   ├── MainActivity.kt                    # Dashboard utama, Simulator HUD & Studio Watch Face
+│   │   ├── model/GpsNavState.kt               # State repositori GPS, Kompas, Odometer & 4 Mode HUD
+│   │   ├── service/BandGpsForegroundService.kt# Pelacak GPS, MediaSession HUD & Notifikasi Getar
+│   │   ├── service/MapsNotificationListener.kt# Pembaca arah belokan Google Maps & Waze
+│   │   └── util/WatchFaceGenerator.kt         # Renderer Watch Face 194x368 & Eksportir .HWT
+│   └── AndroidManifest.xml
+├── watchface-hwt-kit/
+│   ├── CarRace_GD6_Band6.hwt                  # Watch Face Retro Car Race LCD siap pasang
+│   ├── GPS_Cockpit_Cyan_Band6.hwt             # Watch Face Cyber Telemetry Cyan siap pasang
+│   ├── CarRace_GD6_preview.png                # Pratinjau Watch Face Car Race LCD
+│   ├── gallery-ready-194x368/                 # Koleksi wallpaper Watch Face 194x368 PNG
+│   └── tools/build_carrace.ps1                # Kompiler biner RLE BGRA .HWT (HWHD07)
+└── release/
+    └── HuaweiBand6-GPS-HUD-v1.0.apk           # Salinan APK siap instal
+```
+
+---
+
+## 💻 Cara Build dari Kode Sumber (Opsional)
+
+Jika ingin memodifikasi dan mengompilasi ulang proyek ini sendiri:
+1. Buka folder proyek di **Android Studio** (mendukung AGP 9.5+ dan Gradle 9.6).
+2. Jalankan perintah berikut di terminal:
+   ```powershell
+   .\gradlew.bat assembleDebug
+   ```
+3. Untuk mengompilasi ulang file biner `.hwt` Watch Face:
+   ```powershell
+   powershell -ExecutionPolicy Bypass -File .\watchface-hwt-kit\tools\build_carrace.ps1
+   ```
