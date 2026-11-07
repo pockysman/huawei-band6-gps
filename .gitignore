@@ -1,0 +1,16 @@
+# Gradle & Build directories
+.gradle/
+build/
+app/build/
+
+# Local configuration
+local.properties
+
+# Android Studio / IntelliJ IDEA
+.idea/
+*.iml
+*.hprof
+.navigation/
+captures/
+.externalNativeBuild/
+.cxx/

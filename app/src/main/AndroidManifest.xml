@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- Izin GPS & Lokasi Akurat -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+
+    <!-- Izin Foreground Service & Notifikasi untuk meneruskan data ke Huawei Band 6 -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application
+        android:allowBackup="true"
+        android:label="Band 6 GPS HUD"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.Material3.Dark.NoActionBar"
+        tools:targetApi="34">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- Foreground Service: Pelacak Kecepatan GPS + MediaSession HUD + Push Notifikasi -->
+        <service
+            android:name=".service.BandGpsForegroundService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="location|mediaPlayback" />
+
+        <!-- Notification Listener: Membaca Instruksi Arah Google Maps secara Real-Time -->
+        <service
+            android:name=".service.MapsNotificationListener"
+            android:exported="true"
+            android:label="Band 6 Google Maps Reader"
+            android:permission="android.permission.BIND_NOTIFICATION_LISTENER_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.notification.NotificationListenerService" />
+            </intent-filter>
+        </service>
+
+    </application>
+
+</manifest>
