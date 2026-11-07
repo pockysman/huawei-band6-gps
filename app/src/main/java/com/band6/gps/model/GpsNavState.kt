@@ -6,8 +6,9 @@ import kotlin.math.roundToInt
 
 enum class BandHudPage(val title: String) {
     COMBINED_NAV_SPEED("Mode 1: Navigasi + Speed"),
-    SPEEDOMETER_ODO("Mode 2: Speedometer & Jarak"),
-    GPS_COORDINATES("Mode 3: Koordinat & Kompas")
+    COCKPIT_GAUGE_BAR("Mode 2: Visual Bar & Tachometer"),
+    SPEEDOMETER_ODO("Mode 3: Speedometer & Jarak"),
+    GPS_COORDINATES("Mode 4: Koordinat & Kompas")
 }
 
 data class GpsNavSnapshot(
@@ -36,6 +37,23 @@ data class GpsNavSnapshot(
         return dirs[idx]
     }
 
+    fun compassTapeVisual(): String {
+        val dirs = arrayOf("U", "TL", "T", "TG", "S", "BD", "B", "BL")
+        val normalized = ((bearingDeg % 360f) + 360f) % 360f
+        val idx = ((normalized + 22.5f) / 45f).toInt() % 8
+        val left = dirs[(idx + 7) % 8]
+        val center = dirs[idx]
+        val right = dirs[(idx + 1) % 8]
+        return ".. $left | [$center ${bearingDeg.roundToInt()}°] | $right .."
+    }
+
+    fun visualSpeedBar(maxRefKmh: Int = 80): String {
+        val totalSlots = 8
+        val filled = ((speedKmh / maxRefKmh.toFloat()) * totalSlots).roundToInt().coerceIn(0, totalSlots)
+        val empty = totalSlots - filled
+        return "[" + "█".repeat(filled) + "░".repeat(empty) + "]"
+    }
+
     fun formattedTripDistance(): String {
         return if (tripDistanceMeters < 1000.0) {
             "${tripDistanceMeters.roundToInt()} m"
@@ -57,6 +75,9 @@ data class GpsNavSnapshot(
                     "⚡ $spd km/j • 🧭 ${compassCardinal()} (${bearingDeg.roundToInt()}°)"
                 }
             }
+            BandHudPage.COCKPIT_GAUGE_BAR -> {
+                "⚡$spd ${visualSpeedBar(speedLimitAlertKmh)}"
+            }
             BandHudPage.SPEEDOMETER_ODO -> {
                 "⚡ $spd km/j (Maks ${maxSpeedKmh.roundToInt()})"
             }
@@ -77,6 +98,13 @@ data class GpsNavSnapshot(
                     "$nextStreetName ($etaSummary)"
                 } else {
                     "📏 ${formattedTripDistance()} | ⛰️ ${altitudeMeters.roundToInt()}mdpl"
+                }
+            }
+            BandHudPage.COCKPIT_GAUGE_BAR -> {
+                if (isMapsActive) {
+                    "$directionArrow $distanceToTurn • $nextStreetName"
+                } else {
+                    compassTapeVisual()
                 }
             }
             BandHudPage.SPEEDOMETER_ODO -> {

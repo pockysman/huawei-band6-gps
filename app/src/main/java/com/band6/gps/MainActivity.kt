@@ -13,6 +13,7 @@ import android.provider.Settings
 import android.view.Gravity
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ScrollView
 import android.widget.TextView
@@ -24,6 +25,7 @@ import com.band6.gps.model.GpsNavRepository
 import com.band6.gps.model.GpsNavSnapshot
 import com.band6.gps.service.BandGpsForegroundService
 import com.band6.gps.service.MapsNotificationListener
+import com.band6.gps.util.WatchFaceGenerator
 import kotlin.math.roundToInt
 
 class MainActivity : AppCompatActivity() {
@@ -36,6 +38,11 @@ class MainActivity : AppCompatActivity() {
     private lateinit var tvMapsStatus: TextView
     private lateinit var btnToggleService: Button
     private lateinit var btnNotificationAccess: Button
+    private lateinit var ivWatchFacePreview: ImageView
+    private lateinit var tvWatchFaceThemeLabel: TextView
+
+    private var selectedThemeIndex = 0
+    private val themes = WatchFaceGenerator.CockpitTheme.entries
 
     private val stateListener: (GpsNavSnapshot) -> Unit = { snapshot ->
         runOnUiThread { renderSnapshot(snapshot) }
@@ -75,16 +82,16 @@ class MainActivity : AppCompatActivity() {
 
         // Header
         val headerTitle = TextView(this).apply {
-            text = "HUAWEI BAND 6 • GPS HUD"
+            text = "HUAWEI BAND 6 • GPS HUD & WATCHFACE"
             setTextColor(Color.parseColor("#FF6B2C"))
             textSize = 13f
             typeface = Typeface.DEFAULT_BOLD
             letterSpacing = 0.12f
         }
         val headerSub = TextView(this).apply {
-            text = "Navigasi Arah & Speedometer Live"
+            text = "Navigasi Arah, Speedometer & Kustom UI"
             setTextColor(Color.WHITE)
-            textSize = 22f
+            textSize = 21f
             typeface = Typeface.DEFAULT_BOLD
             setPadding(0, dp(4), 0, dp(18))
         }
@@ -101,7 +108,7 @@ class MainActivity : AppCompatActivity() {
         }
 
         val previewLabel = TextView(this).apply {
-            text = "PRATINJAU LAYAR KONTROL MUSIK HUAWEI BAND 6"
+            text = "PRATINJAU LIVE HUD DI HUAWEI BAND 6"
             setTextColor(Color.parseColor("#8B949E"))
             textSize = 11f
             typeface = Typeface.DEFAULT_BOLD
@@ -131,15 +138,16 @@ class MainActivity : AppCompatActivity() {
         tvBandHudTitle = TextView(this).apply {
             text = "⬆️ -- m • 0 km/j"
             setTextColor(Color.WHITE)
-            textSize = 19f
-            typeface = Typeface.DEFAULT_BOLD
+            textSize = 18f
+            typeface = Typeface.MONOSPACE
             gravity = Gravity.CENTER
         }
 
         tvBandHudSubtitle = TextView(this).apply {
             text = "Menunggu rute Google Maps..."
             setTextColor(Color.parseColor("#A5D6FF"))
-            textSize = 14f
+            textSize = 13.5f
+            typeface = Typeface.MONOSPACE
             gravity = Gravity.CENTER
             setPadding(0, dp(8), 0, dp(14))
         }
@@ -180,7 +188,7 @@ class MainActivity : AppCompatActivity() {
         bandScreen.addView(mediaBtnRow)
 
         val bandHint = TextView(this).apply {
-            text = "💡 Tips: Buka menu 'Musik' di Huawei Band 6 untuk melihat layar HUD ini secara live tanpa getaran terus-menerus. Tekan tombol Next/Prev di jam untuk mengganti mode tampilan!"
+            text = "💡 Tekan Next/Prev di layar Musik Huawei Band 6 untuk mengganti 4 Mode Tampilan (termasuk Mode Visual Bar Tachometer & Pita Kompas)!"
             setTextColor(Color.parseColor("#8B949E"))
             textSize = 12f
             setPadding(0, dp(12), 0, 0)
@@ -280,15 +288,114 @@ class MainActivity : AppCompatActivity() {
         }
         root.addView(btnSimulateNav)
 
-        val btnResetTrip = Button(this).apply {
-            text = "🔄 Reset Odometer (Jarak & Kecepatan Maks)"
+        // =========================================================================
+        // KARTU CUSTOM WATCH FACE GENERATOR (CARA 2: DESAIN UI 194x368 PIXEL)
+        // =========================================================================
+        val wfCard = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+            background = roundedBg("#161B22", "#FF6B2C", dp(20))
+            val pad = dp(18)
+            setPadding(pad, pad, pad, pad)
+            val lp = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            lp.topMargin = dp(22)
+            layoutParams = lp
+        }
+
+        val wfHeader = TextView(this).apply {
+            text = "🎨 STUDIO CUSTOM WATCH FACE GPS (194×368)"
+            setTextColor(Color.parseColor("#FF6B2C"))
+            textSize = 13f
+            typeface = Typeface.DEFAULT_BOLD
+            gravity = Gravity.CENTER
+        }
+
+        tvWatchFaceThemeLabel = TextView(this).apply {
+            text = themes[selectedThemeIndex].label
+            setTextColor(Color.WHITE)
+            textSize = 15f
+            typeface = Typeface.DEFAULT_BOLD
+            setPadding(0, dp(4), 0, dp(12))
+            gravity = Gravity.CENTER
+        }
+
+        ivWatchFacePreview = ImageView(this).apply {
+            layoutParams = LinearLayout.LayoutParams(dp(145), dp(276))
+            scaleType = ImageView.ScaleType.FIT_CENTER
+        }
+
+        val btnSwitchTheme = Button(this).apply {
+            text = "🎨 Ganti Tema Warna Cockpit Watch Face"
             setBackgroundColor(Color.parseColor("#30363D"))
             setTextColor(Color.WHITE)
             val lp = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             )
-            lp.topMargin = dp(10)
+            lp.topMargin = dp(12)
+            layoutParams = lp
+            setOnClickListener {
+                selectedThemeIndex = (selectedThemeIndex + 1) % themes.size
+                refreshWatchFacePreview(GpsNavRepository.state)
+            }
+        }
+
+        val btnSaveWatchFace = Button(this).apply {
+            text = "💾 SIMPAN WATCH FACE (194×368) KE GALERI HP"
+            setBackgroundColor(Color.parseColor("#D29922"))
+            setTextColor(Color.BLACK)
+            typeface = Typeface.DEFAULT_BOLD
+            val lp = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            lp.topMargin = dp(8)
+            layoutParams = lp
+            setOnClickListener {
+                val savedPath = WatchFaceGenerator.saveWatchFaceToGallery(
+                    this@MainActivity,
+                    GpsNavRepository.state,
+                    themes[selectedThemeIndex]
+                )
+                if (savedPath != null) {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "✅ Tersimpan di Galeri ($savedPath)! Buka Huawei Health -> Watch Faces -> Gallery untuk memasangnya.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                } else {
+                    Toast.makeText(this@MainActivity, "Gagal menyimpan gambar Watch Face", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
+        val wfDesc = TextView(this).apply {
+            text = "📌 Cara Pasang Tanpa Mod/Root:\n1. Klik 'Simpan Watch Face ke Galeri HP' di atas.\n2. Buka aplikasi Huawei Health -> Perangkat -> Watch Faces -> pilih 'Gallery' (Galeri).\n3. Pilih gambar 194×368 yang baru disimpan, atur posisi jam di bagian atas (di dalam siku tanda kurung), lalu klik Save!\n*(Untuk file .hwt penuh bagi pengguna Gadgetbridge/Huawei Health Mod juga sudah tersedia di folder watchface-hwt-kit di GitHub).*"
+            setTextColor(Color.parseColor("#8B949E"))
+            textSize = 12f
+            setPadding(0, dp(10), 0, 0)
+        }
+
+        wfCard.addView(wfHeader)
+        wfCard.addView(tvWatchFaceThemeLabel)
+        wfCard.addView(ivWatchFacePreview)
+        wfCard.addView(btnSwitchTheme)
+        wfCard.addView(btnSaveWatchFace)
+        wfCard.addView(wfDesc)
+        root.addView(wfCard)
+
+        val btnResetTrip = Button(this).apply {
+            text = "🔄 Reset Odometer (Jarak & Kecepatan Maks)"
+            setBackgroundColor(Color.parseColor("#21262D"))
+            setTextColor(Color.WHITE)
+            val lp = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            lp.topMargin = dp(14)
             layoutParams = lp
             setOnClickListener {
                 GpsNavRepository.resetTripStats()
@@ -297,22 +404,6 @@ class MainActivity : AppCompatActivity() {
             }
         }
         root.addView(btnResetTrip)
-
-        // Panduan Singkat Menghubungkan ke Huawei Health
-        val guideText = TextView(this).apply {
-            text = """
-                📋 CARA AGAR TAMPIL DI HUAWEI BAND 6:
-                1. Buka aplikasi Huawei Health -> Perangkat -> Huawei Band 6 -> Notifikasi.
-                2. Aktifkan centang untuk aplikasi "Band 6 GPS HUD" ini.
-                3. Aktifkan juga fitur "Kontrol Musik" di Huawei Health.
-                4. Tekan tombol "AKTIFKAN GPS HUD" di atas, lalu buka Google Maps seperti biasa.
-                5. Saat belokan dekat, jam akan bergetar menampilkan arah & kecepatan. Saat di jalan lurus, Anda bisa melihat kecepatan & jarak secara real-time di menu Musik pada Huawei Band 6!
-            """.trimIndent()
-            setTextColor(Color.parseColor("#8B949E"))
-            textSize = 13f
-            setPadding(0, dp(20), 0, 0)
-        }
-        root.addView(guideText)
 
         scroll.addView(root)
         return scroll
@@ -340,6 +431,15 @@ class MainActivity : AppCompatActivity() {
             btnToggleService.text = "🚀 AKTIFKAN GPS HUD KE HUAWEI BAND 6"
             btnToggleService.setBackgroundColor(Color.parseColor("#238636"))
         }
+
+        refreshWatchFacePreview(snap)
+    }
+
+    private fun refreshWatchFacePreview(snap: GpsNavSnapshot) {
+        val theme = themes[selectedThemeIndex]
+        tvWatchFaceThemeLabel.text = theme.label
+        val bmp = WatchFaceGenerator.renderWatchFaceBitmap(snap, theme)
+        ivWatchFacePreview.setImageBitmap(bmp)
     }
 
     private fun toggleGpsService() {
@@ -370,7 +470,9 @@ class MainActivity : AppCompatActivity() {
                 distanceToTurn = pick.second,
                 nextStreetName = pick.third,
                 etaSummary = "15:20 • 2.4 km",
-                speedKmh = if (curr.speedKmh < 5f) 46f else curr.speedKmh
+                speedKmh = if (curr.speedKmh < 5f) 52f else curr.speedKmh,
+                maxSpeedKmh = if (curr.maxSpeedKmh < 52f) 68f else curr.maxSpeedKmh,
+                bearingDeg = 315f
             )
         }
         triggerTestAlertOnWrist()

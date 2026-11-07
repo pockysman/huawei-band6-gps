@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<HwTheme>
+    <title>GPS Cockpit HUD</title>
+    <title-cn>GPS 导航仪表盘</title-cn>
+    <author>Band6 GPS HUD</author>
+    <designer>Band6 GPS HUD</designer>
+    <screen>194x368</screen>
+    <version>1.0.0</version>
+    <font>Default</font>
+    <font-cn>Default</font-cn>
+    <briefInfo>Tactical GPS Cockpit &amp; Telemetry Watch Face for Huawei Band 6 (194x368)</briefInfo>
+</HwTheme>

@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WatchFace version="1.0" width="194" height="368" dpi="282" model="Huawei Band 6">
+    <!-- Layer 1: Background Cockpit 194x368 -->
+    <Element type="IMAGE" x="0" y="0" width="194" height="368" src="res/bg_cockpit_194x368.png" />
+
+    <!-- Layer 2: Digital Clock (Hour & Minute) inside Cockpit Brackets (y=58..108) -->
+    <Element type="DIGITAL_TIME" x="24" y="60" width="146" height="44"
+        data_type="HOUR_MINUTE"
+        digit_prefix="res/digit_" />
+
+    <!-- Layer 3: Step Distance (km) & Step Counter (y=190..255) -->
+    <Element type="TEXT_VALUE" x="52" y="208" width="90" height="24"
+        data_type="STEPS"
+        color="#FFFFFF"
+        align="CENTER" />
+
+    <!-- Layer 4: Heart Rate & Battery Telemetry Cards (y=290..346) -->
+    <Element type="TEXT_VALUE" x="16" y="308" width="72" height="20"
+        data_type="HEART_RATE"
+        color="#FF6B2C"
+        align="LEFT" />
+
+    <Element type="TEXT_VALUE" x="106" y="308" width="72" height="20"
+        data_type="BATTERY_PERCENT"
+        color="#3FB950"
+        align="LEFT" />
+</WatchFace>
