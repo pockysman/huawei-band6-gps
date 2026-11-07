@@ -11,6 +11,7 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import android.view.Gravity
+import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
 import android.widget.ImageView
@@ -26,20 +27,51 @@ import com.band6.gps.model.GpsNavSnapshot
 import com.band6.gps.service.BandGpsForegroundService
 import com.band6.gps.service.MapsNotificationListener
 import com.band6.gps.util.WatchFaceGenerator
+import java.util.Locale
 import kotlin.math.roundToInt
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var tvBandModeBadge: TextView
+    // Palette — Direction A: Casio GD-8 x MoTeC Pit Console
+    private val colChassis = Color.parseColor("#0E100F")
+    private val colPanel = Color.parseColor("#151817")
+    private val colRecessed = Color.parseColor("#090B0A")
+    private val colKey = Color.parseColor("#1C201E")
+    private val colHairline = Color.parseColor("#282D2A")
+    private val colBorderStrong = Color.parseColor("#3A413D")
+    private val colLcdSurface = Color.parseColor("#C9D1A8")
+    private val colLcdTeal = Color.parseColor("#88BFB2")
+    private val colLcdInk = Color.parseColor("#1C241E")
+    private val colTextPrimary = Color.parseColor("#ECEFE9")
+    private val colTextSecondary = Color.parseColor("#9AA39D")
+    private val colTextMuted = Color.parseColor("#646D67")
+    private val colCrimson = Color.parseColor("#C83E2B")
+    private val colBrass = Color.parseColor("#D4AF37")
+    private val colSignalOk = Color.parseColor("#47A76A")
+
+    private lateinit var viewBridgeLed: View
+    private lateinit var tvBridgeState: TextView
+    private lateinit var viewMapsLed: View
+    private lateinit var tvMapsPermissionState: TextView
+
+    private lateinit var tvVelocityValue: TextView
+    private lateinit var tvVelocityBar: TextView
+    private lateinit var tvPeakValue: TextView
+    private lateinit var tvOdoValue: TextView
+    private lateinit var tvAltValue: TextView
+    private lateinit var tvCompassValue: TextView
+    private lateinit var tvCoordsValue: TextView
+
+    private lateinit var tvHudPageMeta: TextView
+    private lateinit var tvLcdModeTag: TextView
+    private lateinit var tvLcdEtaTag: TextView
     private lateinit var tvBandHudTitle: TextView
     private lateinit var tvBandHudSubtitle: TextView
-    private lateinit var tvLiveSpeed: TextView
-    private lateinit var tvStatsDetail: TextView
-    private lateinit var tvMapsStatus: TextView
+    private lateinit var tvLcdTrapezoidRight: TextView
+
     private lateinit var btnToggleService: Button
-    private lateinit var btnNotificationAccess: Button
     private lateinit var ivWatchFacePreview: ImageView
-    private lateinit var tvWatchFaceThemeLabel: TextView
+    private val themeButtons = mutableListOf<Button>()
 
     private var selectedThemeIndex = 0
     private val themes = WatchFaceGenerator.CockpitTheme.entries
@@ -50,14 +82,14 @@ class MainActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(buildDashboardView())
+        setContentView(buildConsoleLayout())
         requestNeededPermissions()
     }
 
     override fun onStart() {
         super.onStart()
         GpsNavRepository.addListener(stateListener)
-        updateNotificationListenerButtonState()
+        updateNotificationListenerState()
     }
 
     override fun onStop() {
@@ -65,295 +97,477 @@ class MainActivity : AppCompatActivity() {
         super.onStop()
     }
 
-    private fun buildDashboardView(): ScrollView {
+    private fun buildConsoleLayout(): ScrollView {
         val scroll = ScrollView(this).apply {
-            setBackgroundColor(Color.parseColor("#0D1117"))
+            setBackgroundColor(colChassis)
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.MATCH_PARENT
             )
         }
 
-        val root = LinearLayout(this).apply {
+        val shell = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            val pad = dp(20)
-            setPadding(pad, dp(28), pad, dp(36))
+            background = boxBg(colPanel, colBorderStrong, dp(1), 0)
+            val margin = dp(12)
+            layoutParams = ViewGroup.MarginLayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            ).apply {
+                setMargins(margin, dp(16), margin, dp(28))
+            }
         }
 
-        // Header
-        val headerTitle = TextView(this).apply {
-            text = "HUAWEI BAND 6 • GPS HUD & WATCHFACE"
-            setTextColor(Color.parseColor("#FF6B2C"))
-            textSize = 13f
-            typeface = Typeface.DEFAULT_BOLD
-            letterSpacing = 0.12f
-        }
-        val headerSub = TextView(this).apply {
-            text = "Navigasi Arah, Speedometer & Kustom UI"
-            setTextColor(Color.WHITE)
-            textSize = 21f
-            typeface = Typeface.DEFAULT_BOLD
-            setPadding(0, dp(4), 0, dp(18))
-        }
-        root.addView(headerTitle)
-        root.addView(headerSub)
+        // 1. TOP HARDWARE MASTHEAD & DIAGNOSTIC STRIP
+        shell.addView(buildMasthead())
+        shell.addView(hairlineH())
 
-        // Simulasi Layar Huawei Band 6 (1.47" AMOLED Pill Preview)
-        val bandCard = LinearLayout(this).apply {
+        // 2. 1PX HAIRLINE TELEMETRY MATRIX (2x2)
+        shell.addView(buildTelemetryMatrix())
+        shell.addView(hairlineH())
+
+        // 3. SECTION 01: WRIST MEDIASESSION HUD VIEWPORT (CASIO GD-8 STN-LCD)
+        shell.addView(buildWristHudSection())
+        shell.addView(hairlineH())
+
+        // 4. SECTION 02: HWHD07 WATCH FACE STUDIO (194x368)
+        shell.addView(buildWatchFaceStudioSection())
+        shell.addView(hairlineH())
+
+        // 5. PROTOCOL FOOTER
+        shell.addView(buildFooter())
+
+        scroll.addView(shell)
+        return scroll
+    }
+
+    private fun buildMasthead(): LinearLayout {
+        return LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER_HORIZONTAL
-            background = roundedBg("#161B22", "#30363D", dp(24))
-            val pad = dp(18)
-            setPadding(pad, pad, pad, pad)
-        }
+            setBackgroundColor(colRecessed)
+            setPadding(dp(16), dp(14), dp(16), dp(14))
 
-        val previewLabel = TextView(this).apply {
-            text = "PRATINJAU LIVE HUD DI HUAWEI BAND 6"
-            setTextColor(Color.parseColor("#8B949E"))
-            textSize = 11f
-            typeface = Typeface.DEFAULT_BOLD
-            gravity = Gravity.CENTER
-        }
+            val topRow = LinearLayout(this@MainActivity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+            }
 
-        tvBandModeBadge = TextView(this).apply {
-            text = "Mode 1: Navigasi + Speed"
-            setTextColor(Color.parseColor("#58A6FF"))
-            textSize = 12f
-            setPadding(0, dp(6), 0, dp(10))
-            gravity = Gravity.CENTER
-        }
+            val badge = TextView(this@MainActivity).apply {
+                text = "GD-6"
+                setTextColor(colLcdInk)
+                setBackgroundColor(colLcdSurface)
+                typeface = Typeface.MONOSPACE
+                textSize = 11f
+                setPadding(dp(6), dp(2), dp(6), dp(2))
+            }
 
-        // Layar Dalam Band 6
-        val bandScreen = LinearLayout(this).apply {
+            val title = TextView(this@MainActivity).apply {
+                text = "HUAWEI BAND 6 TELEMETRY CONSOLE"
+                setTextColor(colTextPrimary)
+                typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+                textSize = 14.5f
+                setPadding(dp(10), 0, 0, 0)
+            }
+
+            topRow.addView(badge)
+            topRow.addView(title)
+
+            // Diagnostic status row
+            val diagRow = LinearLayout(this@MainActivity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(0, dp(10), 0, 0)
+            }
+
+            // Bridge Status Indicator
+            val bridgeBox = LinearLayout(this@MainActivity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+            }
+            viewBridgeLed = View(this@MainActivity).apply {
+                layoutParams = LinearLayout.LayoutParams(dp(7), dp(7))
+                setBackgroundColor(colBrass)
+            }
+            tvBridgeState = TextView(this@MainActivity).apply {
+                text = "BRIDGE: STANDBY"
+                setTextColor(colTextSecondary)
+                typeface = Typeface.MONOSPACE
+                textSize = 11f
+                setPadding(dp(6), 0, 0, 0)
+            }
+            bridgeBox.addView(viewBridgeLed)
+            bridgeBox.addView(tvBridgeState)
+
+            // Maps Listener Permission Status (Clickable inline)
+            val mapsBox = LinearLayout(this@MainActivity).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL or Gravity.END
+                layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.2f)
+                setOnClickListener {
+                    startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
+                }
+            }
+            viewMapsLed = View(this@MainActivity).apply {
+                layoutParams = LinearLayout.LayoutParams(dp(7), dp(7))
+                setBackgroundColor(colCrimson)
+            }
+            tvMapsPermissionState = TextView(this@MainActivity).apply {
+                text = "MAPS: TAP TO BIND"
+                setTextColor(colBrass)
+                typeface = Typeface.MONOSPACE
+                textSize = 11f
+                setPadding(dp(6), 0, 0, 0)
+            }
+            mapsBox.addView(viewMapsLed)
+            mapsBox.addView(tvMapsPermissionState)
+
+            diagRow.addView(bridgeBox)
+            diagRow.addView(mapsBox)
+
+            addView(topRow)
+            addView(diagRow)
+        }
+    }
+
+    private fun buildTelemetryMatrix(): LinearLayout {
+        val container = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            background = roundedBg("#05070A", "#FF6B2C", dp(22))
-            val pad = dp(18)
-            setPadding(pad, dp(20), pad, dp(20))
+        }
+
+        // Row 1: Ground Velocity + Peak Record
+        val row1 = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
             )
         }
 
+        val cellVelocity = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16), dp(14), dp(16), dp(14))
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.25f)
+
+            addView(monoLabel("GROUND VELOCITY • GPS 1HZ", colTextMuted, 10f))
+            tvVelocityValue = TextView(this@MainActivity).apply {
+                text = "0 km/h"
+                setTextColor(colTextPrimary)
+                typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+                textSize = 30f
+                setPadding(0, dp(4), 0, dp(4))
+            }
+            tvVelocityBar = monoLabel("[░░░░░░░░] LIM 80 KM/H", colBrass, 10.5f)
+            addView(tvVelocityValue)
+            addView(tvVelocityBar)
+        }
+
+        val cellPeak = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16), dp(14), dp(16), dp(14))
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MATCH_PARENT, 1f)
+            setOnClickListener {
+                GpsNavRepository.resetTripStats()
+                notifyServiceRefresh(false)
+                Toast.makeText(this@MainActivity, "Odometer & Peak velocity zeroed", Toast.LENGTH_SHORT).show()
+            }
+
+            addView(monoLabel("PEAK RECORD", colTextMuted, 10f))
+            tvPeakValue = TextView(this@MainActivity).apply {
+                text = "0 km/h"
+                setTextColor(colTextPrimary)
+                typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+                textSize = 20f
+                setPadding(0, dp(8), 0, dp(6))
+            }
+            addView(tvPeakValue)
+            addView(monoLabel("[TAP TO ZERO TRIP]", colTextSecondary, 10f))
+        }
+
+        row1.addView(cellVelocity)
+        row1.addView(hairlineV())
+        row1.addView(cellPeak)
+
+        // Row 2: Trip Odometer + Compass Heading
+        val row2 = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+        }
+
+        val cellOdo = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16), dp(14), dp(16), dp(14))
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1.25f)
+
+            addView(monoLabel("TRIP ODOMETER", colTextMuted, 10f))
+            tvOdoValue = TextView(this@MainActivity).apply {
+                text = "0 m"
+                setTextColor(colTextPrimary)
+                typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+                textSize = 20f
+                setPadding(0, dp(6), 0, dp(4))
+            }
+            tvAltValue = monoLabel("ALT 0 m ASL", colTextSecondary, 10.5f)
+            addView(tvOdoValue)
+            addView(tvAltValue)
+        }
+
+        val cellCompass = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16), dp(14), dp(16), dp(14))
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+
+            addView(monoLabel("HEADING • TRUE DEG", colTextMuted, 10f))
+            tvCompassValue = TextView(this@MainActivity).apply {
+                text = "U 000°"
+                setTextColor(colTextPrimary)
+                typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+                textSize = 20f
+                setPadding(0, dp(6), 0, dp(4))
+            }
+            tvCoordsValue = monoLabel("0.00000, 0.00000", colTextSecondary, 10f)
+            addView(tvCompassValue)
+            addView(tvCoordsValue)
+        }
+
+        row2.addView(cellOdo)
+        row2.addView(hairlineV())
+        row2.addView(cellCompass)
+
+        container.addView(row1)
+        container.addView(hairlineH())
+        container.addView(row2)
+        return container
+    }
+
+    private fun buildWristHudSection(): LinearLayout {
+        val sec = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(16), dp(18), dp(16), dp(18))
+        }
+
+        // Section Header (01 / WRIST MEDIASESSION HUD VIEWPORT)
+        val headerRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, 0, 0, dp(10))
+        }
+        val idx = monoLabel("01 / ", colBrass, 11f)
+        val title = TextView(this).apply {
+            text = "WRIST MEDIASESSION HUD VIEWPORT"
+            setTextColor(colTextPrimary)
+            typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
+            textSize = 13f
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        }
+        tvHudPageMeta = monoLabel("MODE 1/4", colTextMuted, 10.5f)
+        headerRow.addView(idx)
+        headerRow.addView(title)
+        headerRow.addView(tvHudPageMeta)
+        sec.addView(headerRow)
+
+        // Metallic Bezel Frame housing the Reflective STN-LCD Screen
+        val bezel = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            background = boxBg(colRecessed, Color.parseColor("#9FA6A2"), dp(2), dp(2))
+            setPadding(dp(12), dp(10), dp(12), dp(12))
+        }
+
+        val bezelHeader = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(0, 0, 0, dp(8))
+        }
+        bezelHeader.addView(monoLabel("RACING TELEMETRY", colTextSecondary, 10f).apply {
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        })
+        bezelHeader.addView(monoLabel("CAR RACE GD-6", colBrass, 10f))
+        bezel.addView(bezelHeader)
+
+        // Reflective Olive STN-LCD Screen (#C9D1A8)
+        val lcdScreen = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            background = boxBg(colLcdSurface, colLcdInk, dp(2), dp(2))
+            setPadding(dp(14), dp(12), dp(14), dp(12))
+        }
+
+        val lcdTopRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(0, 0, 0, dp(6))
+        }
+        tvLcdModeTag = monoLabel("MODE 01: NAV+SPD", colLcdInk, 10.5f).apply {
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        }
+        tvLcdEtaTag = monoLabel("STANDBY", colLcdInk, 10.5f)
+        lcdTopRow.addView(tvLcdModeTag)
+        lcdTopRow.addView(tvLcdEtaTag)
+
+        val lcdDivider1 = View(this).apply {
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(1))
+            setBackgroundColor(Color.argb(90, 28, 36, 30))
+        }
+
         tvBandHudTitle = TextView(this).apply {
-            text = "⬆️ -- m • 0 km/j"
-            setTextColor(Color.WHITE)
-            textSize = 18f
-            typeface = Typeface.MONOSPACE
-            gravity = Gravity.CENTER
+            text = "0 km/j • U (0°)"
+            setTextColor(colLcdInk)
+            typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+            textSize = 18.5f
+            setPadding(0, dp(10), 0, dp(4))
         }
 
         tvBandHudSubtitle = TextView(this).apply {
             text = "Menunggu rute Google Maps..."
-            setTextColor(Color.parseColor("#A5D6FF"))
-            textSize = 13.5f
+            setTextColor(colLcdInk)
             typeface = Typeface.MONOSPACE
-            gravity = Gravity.CENTER
-            setPadding(0, dp(8), 0, dp(14))
+            textSize = 13f
+            setPadding(0, 0, 0, dp(10))
         }
 
-        // Baris Tombol Kontrol Musik (Prev / Play / Next)
-        val mediaBtnRow = LinearLayout(this).apply {
+        // Bottom Teal Trapezoid Strip inside the LCD
+        val tealStrip = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER
+            background = boxBg(colLcdTeal, colLcdInk, dp(1), 0)
+            setPadding(dp(10), dp(6), dp(10), dp(6))
         }
+        tealStrip.addView(monoLabel("ALM 50 100 150 250 300", colLcdInk, 10f).apply {
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        })
+        tvLcdTrapezoidRight = monoLabel("SIG 0.0 km", colLcdInk, 10f)
+        tealStrip.addView(tvLcdTrapezoidRight)
 
-        val btnPrevPage = Button(this).apply {
-            text = "⏮️ Mode"
+        lcdScreen.addView(lcdTopRow)
+        lcdScreen.addView(lcdDivider1)
+        lcdScreen.addView(tvBandHudTitle)
+        lcdScreen.addView(tvBandHudSubtitle)
+        lcdScreen.addView(tealStrip)
+        bezel.addView(lcdScreen)
+        sec.addView(bezel)
+
+        // Tactile 3-Key Switch Bank (< LEFT / PULSE / RIGHT >)
+        val keyRow1 = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(0, dp(10), 0, 0)
+        }
+        val btnPrev = mechButton("< PREV MODE", colKey, colBorderStrong, colTextPrimary).apply {
+            layoutParams = LinearLayout.LayoutParams(0, dp(42), 1f).apply { rightMargin = dp(6) }
             setOnClickListener {
                 GpsNavRepository.previousHudPage()
                 notifyServiceRefresh(false)
             }
         }
-        val btnPushPopup = Button(this).apply {
-            text = "⏯️ Kirim Getar"
-            setOnClickListener {
-                triggerTestAlertOnWrist()
-            }
+        val btnPulse = mechButton("PULSE WRIST", colCrimson, Color.parseColor("#E0533F"), Color.WHITE).apply {
+            layoutParams = LinearLayout.LayoutParams(0, dp(42), 1f).apply { rightMargin = dp(6) }
+            setOnClickListener { triggerTestAlertOnWrist() }
         }
-        val btnNextPage = Button(this).apply {
-            text = "Mode ⏭️"
+        val btnNext = mechButton("NEXT MODE >", colKey, colBorderStrong, colTextPrimary).apply {
+            layoutParams = LinearLayout.LayoutParams(0, dp(42), 1f)
             setOnClickListener {
                 GpsNavRepository.nextHudPage()
                 notifyServiceRefresh(false)
             }
         }
+        keyRow1.addView(btnPrev)
+        keyRow1.addView(btnPulse)
+        keyRow1.addView(btnNext)
+        sec.addView(keyRow1)
 
-        mediaBtnRow.addView(btnPrevPage)
-        mediaBtnRow.addView(btnPushPopup)
-        mediaBtnRow.addView(btnNextPage)
-
-        bandScreen.addView(tvBandHudTitle)
-        bandScreen.addView(tvBandHudSubtitle)
-        bandScreen.addView(mediaBtnRow)
-
-        val bandHint = TextView(this).apply {
-            text = "💡 Tekan Next/Prev di layar Musik Huawei Band 6 untuk mengganti 4 Mode Tampilan (termasuk Mode Visual Bar Tachometer & Pita Kompas)!"
-            setTextColor(Color.parseColor("#8B949E"))
-            textSize = 12f
-            setPadding(0, dp(12), 0, 0)
+        // Primary Service Toggle + Turn Simulator Row
+        val keyRow2 = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(0, dp(8), 0, 0)
         }
-
-        bandCard.addView(previewLabel)
-        bandCard.addView(tvBandModeBadge)
-        bandCard.addView(bandScreen)
-        bandCard.addView(bandHint)
-        root.addView(bandCard)
-
-        // Kartu Speedometer & Telemetri GPS
-        val telemetryCard = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-            background = roundedBg("#161B22", "#30363D", dp(18))
-            val pad = dp(16)
-            setPadding(pad, pad, pad, pad)
-            val lp = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-            lp.topMargin = dp(16)
-            layoutParams = lp
-        }
-
-        tvLiveSpeed = TextView(this).apply {
-            text = "0 km/jam"
-            setTextColor(Color.parseColor("#3FB950"))
-            textSize = 32f
-            typeface = Typeface.DEFAULT_BOLD
-        }
-
-        tvStatsDetail = TextView(this).apply {
-            text = "Maks: 0 km/j  •  Jarak: 0 m  •  Kompas: U (0°)"
-            setTextColor(Color.parseColor("#C9D1D9"))
-            textSize = 14f
-            setPadding(0, dp(6), 0, dp(6))
-        }
-
-        tvMapsStatus = TextView(this).apply {
-            text = "Status Google Maps: Menunggu navigasi aktif"
-            setTextColor(Color.parseColor("#D29922"))
-            textSize = 13f
-        }
-
-        telemetryCard.addView(tvLiveSpeed)
-        telemetryCard.addView(tvStatsDetail)
-        telemetryCard.addView(tvMapsStatus)
-        root.addView(telemetryCard)
-
-        // Tombol Utama: Mulai / Hentikan GPS HUD
-        btnToggleService = Button(this).apply {
-            text = "🚀 AKTIFKAN GPS HUD KE HUAWEI BAND 6"
-            setBackgroundColor(Color.parseColor("#238636"))
-            setTextColor(Color.WHITE)
-            textSize = 15f
-            typeface = Typeface.DEFAULT_BOLD
-            val lp = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-            lp.topMargin = dp(18)
-            layoutParams = lp
+        btnToggleService = mechButton("ENGAGE HUD BRIDGE", colCrimson, Color.parseColor("#E0533F"), Color.WHITE).apply {
+            layoutParams = LinearLayout.LayoutParams(0, dp(46), 1.3f).apply { rightMargin = dp(6) }
             setOnClickListener { toggleGpsService() }
         }
-        root.addView(btnToggleService)
-
-        // Tombol Izin Notification Listener (Untuk membaca arah Google Maps)
-        btnNotificationAccess = Button(this).apply {
-            text = "🔔 Berikan Izin Baca Rute Google Maps"
-            setBackgroundColor(Color.parseColor("#1F6FEB"))
-            setTextColor(Color.WHITE)
-            val lp = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-            lp.topMargin = dp(10)
-            layoutParams = lp
-            setOnClickListener {
-                startActivity(Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS))
-            }
-        }
-        root.addView(btnNotificationAccess)
-
-        // Tombol Simulasi Belokan & Reset Jarak
-        val btnSimulateNav = Button(this).apply {
-            text = "🧪 Simulasi Belokan Maps + Tes Getar Band 6"
-            setBackgroundColor(Color.parseColor("#6E40C9"))
-            setTextColor(Color.WHITE)
-            val lp = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-            lp.topMargin = dp(10)
-            layoutParams = lp
+        val btnSimTurn = mechButton("SIMULATE MANEUVER", colKey, colBrass, colBrass).apply {
+            layoutParams = LinearLayout.LayoutParams(0, dp(46), 1f)
             setOnClickListener { simulateTurnAndVibrateWrist() }
         }
-        root.addView(btnSimulateNav)
+        keyRow2.addView(btnToggleService)
+        keyRow2.addView(btnSimTurn)
+        sec.addView(keyRow2)
 
-        // =========================================================================
-        // KARTU CUSTOM WATCH FACE GENERATOR (CARA 2: DESAIN UI 194x368 PIXEL)
-        // =========================================================================
-        val wfCard = LinearLayout(this).apply {
+        return sec
+    }
+
+    private fun buildWatchFaceStudioSection(): LinearLayout {
+        val sec = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER_HORIZONTAL
-            background = roundedBg("#161B22", "#FF6B2C", dp(20))
-            val pad = dp(18)
-            setPadding(pad, pad, pad, pad)
-            val lp = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-            lp.topMargin = dp(22)
-            layoutParams = lp
+            setBackgroundColor(Color.parseColor("#121514"))
+            setPadding(dp(16), dp(18), dp(16), dp(18))
         }
 
-        val wfHeader = TextView(this).apply {
-            text = "🎨 STUDIO CUSTOM WATCH FACE GPS (194×368)"
-            setTextColor(Color.parseColor("#FF6B2C"))
+        val headerRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(0, 0, 0, dp(12))
+        }
+        headerRow.addView(monoLabel("02 / ", colBrass, 11f))
+        headerRow.addView(TextView(this).apply {
+            text = "HWHD07 WATCH FACE STUDIO"
+            setTextColor(colTextPrimary)
+            typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
             textSize = 13f
-            typeface = Typeface.DEFAULT_BOLD
-            gravity = Gravity.CENTER
-        }
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        })
+        headerRow.addView(monoLabel("194×368 PX", colTextMuted, 10.5f))
+        sec.addView(headerRow)
 
-        tvWatchFaceThemeLabel = TextView(this).apply {
-            text = themes[selectedThemeIndex].label
-            setTextColor(Color.WHITE)
-            textSize = 15f
-            typeface = Typeface.DEFAULT_BOLD
-            setPadding(0, dp(4), 0, dp(12))
-            gravity = Gravity.CENTER
+        // Split Layout: Left 194x368 Canvas Preview + Right Controls
+        val splitRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.TOP
         }
 
         ivWatchFacePreview = ImageView(this).apply {
-            layoutParams = LinearLayout.LayoutParams(dp(145), dp(276))
-            scaleType = ImageView.ScaleType.FIT_CENTER
-        }
-
-        val btnSwitchTheme = Button(this).apply {
-            text = "🎨 Ganti Tema Warna Cockpit Watch Face"
-            setBackgroundColor(Color.parseColor("#30363D"))
-            setTextColor(Color.WHITE)
-            val lp = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-            lp.topMargin = dp(12)
-            layoutParams = lp
-            setOnClickListener {
-                selectedThemeIndex = (selectedThemeIndex + 1) % themes.size
-                refreshWatchFacePreview(GpsNavRepository.state)
+            layoutParams = LinearLayout.LayoutParams(dp(122), dp(231)).apply {
+                rightMargin = dp(14)
             }
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            background = boxBg(colRecessed, colBorderStrong, dp(1), 0)
         }
 
-        val btnSaveWatchFace = Button(this).apply {
-            text = "💾 SIMPAN WATCH FACE (194×368) KE GALERI HP"
-            setBackgroundColor(Color.parseColor("#D29922"))
-            setTextColor(Color.BLACK)
-            typeface = Typeface.DEFAULT_BOLD
-            val lp = LinearLayout.LayoutParams(
+        val rightCol = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
+        }
+
+        themeButtons.clear()
+        val shortLabels = arrayOf(
+            "01 / Car Race LCD",
+            "02 / Garmin Tactical",
+            "03 / Cyber Telemetry",
+            "04 / NightOps Radar"
+        )
+        for (i in themes.indices) {
+            val btn = Button(this).apply {
+                text = shortLabels.getOrElse(i) { themes[i].label }
+                typeface = Typeface.MONOSPACE
+                textSize = 11f
+                gravity = Gravity.START or Gravity.CENTER_VERTICAL
+                isAllCaps = false
+                setPadding(dp(10), 0, dp(10), 0)
+                layoutParams = LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT,
+                    dp(36)
+                ).apply { bottomMargin = dp(4) }
+                setOnClickListener {
+                    selectedThemeIndex = i
+                    refreshWatchFacePreview(GpsNavRepository.state)
+                }
+            }
+            themeButtons.add(btn)
+            rightCol.addView(btn)
+        }
+
+        val btnSaveGallery = mechButton("SAVE 194×368 PNG", colCrimson, Color.parseColor("#E0533F"), Color.WHITE).apply {
+            layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-            lp.topMargin = dp(8)
-            layoutParams = lp
+                dp(40)
+            ).apply { topMargin = dp(6) }
             setOnClickListener {
                 val savedPath = WatchFaceGenerator.saveWatchFaceToGallery(
                     this@MainActivity,
@@ -363,108 +577,131 @@ class MainActivity : AppCompatActivity() {
                 if (savedPath != null) {
                     Toast.makeText(
                         this@MainActivity,
-                        "✅ Tersimpan di Galeri ($savedPath)! Buka Huawei Health -> Watch Faces -> Gallery untuk memasangnya.",
+                        "Saved to $savedPath (Apply via Huawei Health -> Watch Faces -> Gallery)",
                         Toast.LENGTH_LONG
                     ).show()
                 } else {
-                    Toast.makeText(this@MainActivity, "Gagal menyimpan gambar Watch Face", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MainActivity, "Failed to write PNG", Toast.LENGTH_SHORT).show()
                 }
             }
         }
 
-        val btnExportHwt = Button(this).apply {
-            text = "📦 EKSPOR FILE .HWT (CAR RACE LCD) KE DOWNLOAD HP"
-            setBackgroundColor(Color.parseColor("#238636"))
-            setTextColor(Color.WHITE)
-            typeface = Typeface.DEFAULT_BOLD
-            val lp = LinearLayout.LayoutParams(
+        val btnExportHwt = mechButton("EXPORT .HWT BINARY", colKey, colBrass, colBrass).apply {
+            layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-            lp.topMargin = dp(8)
-            layoutParams = lp
+                dp(40)
+            ).apply { topMargin = dp(6) }
             setOnClickListener {
                 val path = WatchFaceGenerator.exportBundledHwtToDownloads(this@MainActivity)
                 if (path != null) {
                     Toast.makeText(
                         this@MainActivity,
-                        "✅ File .HWT tersimpan di $path! Siap dipasang via Gadgetbridge / Huawei Health.",
+                        "Exported HWHD07 binary to $path",
                         Toast.LENGTH_LONG
                     ).show()
                 } else {
-                    Toast.makeText(this@MainActivity, "Gagal mengekspor file .HWT", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@MainActivity, "Failed to export .HWT", Toast.LENGTH_SHORT).show()
                 }
             }
         }
 
-        val wfDesc = TextView(this).apply {
-            text = "📌 Tersedia 2 Cara Pasang ke Huawei Band 6:\n• Cara 1 (Resmi Tanpa Mod): Klik 'Simpan ke Galeri HP', lalu buka Huawei Health -> Watch Faces -> Gallery -> pilih gambar Car Race LCD (sudah memuat data MAX km/j, ODO & ALT dari aplikasi ini!).\n• Cara 2 (File .HWT Penuh): Klik 'Ekspor File .HWT ke Download HP' lalu pasang file CarRace_GD6_Band6.hwt lewat Gadgetbridge / Huawei Health."
-            setTextColor(Color.parseColor("#8B949E"))
-            textSize = 12f
-            setPadding(0, dp(10), 0, 0)
+        rightCol.addView(btnSaveGallery)
+        rightCol.addView(btnExportHwt)
+
+        splitRow.addView(ivWatchFacePreview)
+        splitRow.addView(rightCol)
+        sec.addView(splitRow)
+
+        val specNote = monoLabel(
+            "GALLERY MODE: Saves 194×368 PNG with your Peak KM/H & Trip Odometer stamped.\n" +
+                "BINARY MODE: Exports CarRace_GD6_Band6.hwt (HWHD07 v2.1.1) to Downloads.",
+            colTextMuted,
+            10f
+        ).apply { setPadding(0, dp(12), 0, 0) }
+        sec.addView(specNote)
+
+        return sec
+    }
+
+    private fun buildFooter(): LinearLayout {
+        return LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setBackgroundColor(colRecessed)
+            setPadding(dp(16), dp(12), dp(16), dp(12))
+            addView(monoLabel("TRANSPORT: ANDROID MEDIASESSION + NOTIFICATION LISTENER BRIDGE", colTextMuted, 9.5f))
         }
-
-        wfCard.addView(wfHeader)
-        wfCard.addView(tvWatchFaceThemeLabel)
-        wfCard.addView(ivWatchFacePreview)
-        wfCard.addView(btnSwitchTheme)
-        wfCard.addView(btnSaveWatchFace)
-        wfCard.addView(btnExportHwt)
-        wfCard.addView(wfDesc)
-        root.addView(wfCard)
-
-        val btnResetTrip = Button(this).apply {
-            text = "🔄 Reset Odometer (Jarak & Kecepatan Maks)"
-            setBackgroundColor(Color.parseColor("#21262D"))
-            setTextColor(Color.WHITE)
-            val lp = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-            )
-            lp.topMargin = dp(14)
-            layoutParams = lp
-            setOnClickListener {
-                GpsNavRepository.resetTripStats()
-                notifyServiceRefresh(false)
-                Toast.makeText(this@MainActivity, "Jarak tempuh & kec. maks direset!", Toast.LENGTH_SHORT).show()
-            }
-        }
-        root.addView(btnResetTrip)
-
-        scroll.addView(root)
-        return scroll
     }
 
     private fun renderSnapshot(snap: GpsNavSnapshot) {
-        tvBandModeBadge.text = snap.activeHudPage.title
-        tvBandHudTitle.text = snap.buildBandHudTitle()
-        tvBandHudSubtitle.text = snap.buildBandHudSubtitle()
+        val cleanTitle = stripEmojis(snap.buildBandHudTitle())
+        val cleanSub = stripEmojis(snap.buildBandHudSubtitle())
 
-        tvLiveSpeed.text = "${snap.speedKmh.roundToInt()} km/jam"
-        tvStatsDetail.text =
-            "Maks: ${snap.maxSpeedKmh.roundToInt()} km/j  •  Jarak: ${snap.formattedTripDistance()}  •  Kompas: ${snap.compassCardinal()} (${snap.bearingDeg.roundToInt()}°)"
+        tvVelocityValue.text = "${snap.speedKmh.roundToInt()} km/h"
+        tvVelocityBar.text = "${snap.visualSpeedBar(snap.speedLimitAlertKmh)} LIM ${snap.speedLimitAlertKmh} KM/H"
+        tvPeakValue.text = "${snap.maxSpeedKmh.roundToInt()} km/h"
+        tvOdoValue.text = snap.formattedTripDistance()
+        tvAltValue.text = "ALT ${snap.altitudeMeters.roundToInt()} m ASL"
+        tvCompassValue.text = "${snap.compassCardinal()} ${String.format(Locale.US, "%03d", snap.bearingDeg.roundToInt())}°"
+        tvCoordsValue.text = String.format(Locale.US, "%.5f, %.5f", snap.latitude, snap.longitude)
 
-        tvMapsStatus.text = if (snap.isMapsActive) {
-            "🟢 Rute Aktif: ${snap.directionArrow} ${snap.distanceToTurn} -> ${snap.nextStreetName}"
-        } else {
-            "🟡 Google Maps belum navigasi (Mode Speedometer & Kompas Aktif)"
-        }
+        val pageOrd = snap.activeHudPage.ordinal + 1
+        tvHudPageMeta.text = "PAGE $pageOrd/4"
+        tvLcdModeTag.text = snap.activeHudPage.title.uppercase(Locale.US)
+        tvLcdEtaTag.text = if (snap.isMapsActive) "ETA ${snap.etaSummary}" else "GPS STANDBY"
+        tvBandHudTitle.text = cleanTitle
+        tvBandHudSubtitle.text = cleanSub
+        tvLcdTrapezoidRight.text = "SIG ${snap.formattedTripDistance()}"
 
         if (snap.isServiceRunning) {
-            btnToggleService.text = "⏹️ HENTIKAN LAYANAN GPS HUD"
-            btnToggleService.setBackgroundColor(Color.parseColor("#DA3633"))
+            viewBridgeLed.setBackgroundColor(colSignalOk)
+            tvBridgeState.text = "BRIDGE: ACTIVE"
+            tvBridgeState.setTextColor(colTextPrimary)
+            btnToggleService.text = "TERMINATE BRIDGE"
+            btnToggleService.background = boxBg(colKey, colCrimson, dp(1), dp(2))
+            btnToggleService.setTextColor(colCrimson)
         } else {
-            btnToggleService.text = "🚀 AKTIFKAN GPS HUD KE HUAWEI BAND 6"
-            btnToggleService.setBackgroundColor(Color.parseColor("#238636"))
+            viewBridgeLed.setBackgroundColor(colBrass)
+            tvBridgeState.text = "BRIDGE: STANDBY"
+            tvBridgeState.setTextColor(colTextSecondary)
+            btnToggleService.text = "ENGAGE HUD BRIDGE"
+            btnToggleService.background = boxBg(colCrimson, Color.parseColor("#E0533F"), dp(1), dp(2))
+            btnToggleService.setTextColor(Color.WHITE)
         }
 
         refreshWatchFacePreview(snap)
     }
 
+    private fun stripEmojis(raw: String): String {
+        return raw
+            .replace("⬅️", "[L]")
+            .replace("➡️", "[R]")
+            .replace("⬆️", "[STR]")
+            .replace("↩️", "[U-TURN]")
+            .replace("↖️", "[SL-L]")
+            .replace("↗️", "[SL-R]")
+            .replace("🔄", "[RND]")
+            .replace("🏁", "[FIN]")
+            .replace("⚡", "")
+            .replace("🧭", "")
+            .replace("📏", "ODO ")
+            .replace("⛰️", "ALT ")
+            .replace("📍", "")
+            .replace("🎯", "ACC ")
+            .trim()
+    }
+
     private fun refreshWatchFacePreview(snap: GpsNavSnapshot) {
-        val theme = themes[selectedThemeIndex]
-        tvWatchFaceThemeLabel.text = theme.label
-        val bmp = WatchFaceGenerator.renderWatchFaceBitmap(snap, theme)
+        for (i in themeButtons.indices) {
+            val active = (i == selectedThemeIndex)
+            themeButtons[i].background = boxBg(
+                if (active) colKey else colRecessed,
+                if (active) colBrass else colHairline,
+                dp(1),
+                0
+            )
+            themeButtons[i].setTextColor(if (active) colTextPrimary else colTextSecondary)
+        }
+        val bmp = WatchFaceGenerator.renderWatchFaceBitmap(snap, themes[selectedThemeIndex])
         ivWatchFacePreview.setImageBitmap(bmp)
     }
 
@@ -477,7 +714,7 @@ class MainActivity : AppCompatActivity() {
             startService(intent)
         } else {
             ContextCompat.startForegroundService(this, intent)
-            Toast.makeText(this, "GPS HUD Aktif! Buka menu Musik / Notifikasi di Huawei Band 6.", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "HUD Bridge engaged. Open Music Control on Huawei Band 6.", Toast.LENGTH_LONG).show()
         }
     }
 
@@ -485,8 +722,8 @@ class MainActivity : AppCompatActivity() {
         val sampleTurns = listOf(
             Triple("⬅️", "120 m", "Belok kiri ke Jl. Jend. Sudirman"),
             Triple("➡️", "50 m", "Belok kanan ke Jl. MH Thamrin"),
-            Triple("↩️", "200 m", "Putar balik di depan Bundaran HI"),
-            Triple("🏁", "30 m", "Tujuan Anda berada di sebelah kiri")
+            Triple("↩️", "200 m", "Putar balik di Bundaran HI"),
+            Triple("🏁", "30 m", "Tujuan berada di sisi kiri")
         )
         val pick = sampleTurns.random()
         GpsNavRepository.update { curr ->
@@ -496,8 +733,8 @@ class MainActivity : AppCompatActivity() {
                 distanceToTurn = pick.second,
                 nextStreetName = pick.third,
                 etaSummary = "15:20 • 2.4 km",
-                speedKmh = if (curr.speedKmh < 5f) 52f else curr.speedKmh,
-                maxSpeedKmh = if (curr.maxSpeedKmh < 52f) 68f else curr.maxSpeedKmh,
+                speedKmh = if (curr.speedKmh < 5f) 54f else curr.speedKmh,
+                maxSpeedKmh = if (curr.maxSpeedKmh < 54f) 68f else curr.maxSpeedKmh,
                 bearingDeg = 315f
             )
         }
@@ -509,7 +746,7 @@ class MainActivity : AppCompatActivity() {
             action = BandGpsForegroundService.ACTION_PUSH_TEST_ALERT
         }
         ContextCompat.startForegroundService(this, intent)
-        Toast.makeText(this, "Mengirim instruksi GPS ke Huawei Band 6...", Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, "Dispatched telemetry alert to Huawei Band 6", Toast.LENGTH_SHORT).show()
     }
 
     private fun notifyServiceRefresh(triggerWristAlert: Boolean) {
@@ -521,16 +758,18 @@ class MainActivity : AppCompatActivity() {
         startService(intent)
     }
 
-    private fun updateNotificationListenerButtonState() {
+    private fun updateNotificationListenerState() {
         val cn = ComponentName(this, MapsNotificationListener::class.java)
         val flat = Settings.Secure.getString(contentResolver, "enabled_notification_listeners").orEmpty()
         val enabled = flat.contains(cn.flattenToString())
         if (enabled) {
-            btnNotificationAccess.text = "✅ Izin Baca Google Maps Sudah Aktif"
-            btnNotificationAccess.setBackgroundColor(Color.parseColor("#21262D"))
+            viewMapsLed.setBackgroundColor(colSignalOk)
+            tvMapsPermissionState.text = "MAPS LISTENER: BOUND"
+            tvMapsPermissionState.setTextColor(colTextSecondary)
         } else {
-            btnNotificationAccess.text = "🔔 Berikan Izin Baca Rute Google Maps (Wajib)"
-            btnNotificationAccess.setBackgroundColor(Color.parseColor("#1F6FEB"))
+            viewMapsLed.setBackgroundColor(colCrimson)
+            tvMapsPermissionState.text = "MAPS: TAP TO BIND"
+            tvMapsPermissionState.setTextColor(colBrass)
         }
     }
 
@@ -550,11 +789,46 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun roundedBg(fillHex: String, strokeHex: String, cornerRadiusPx: Int): GradientDrawable {
+    private fun monoLabel(textStr: String, color: Int, sizeSp: Float): TextView {
+        return TextView(this).apply {
+            text = textStr
+            setTextColor(color)
+            typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+            textSize = sizeSp
+        }
+    }
+
+    private fun mechButton(label: String, fillCol: Int, strokeCol: Int, textCol: Int): Button {
+        return Button(this).apply {
+            text = label
+            setTextColor(textCol)
+            typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
+            textSize = 11f
+            isAllCaps = false
+            background = boxBg(fillCol, strokeCol, dp(1), dp(2))
+            setPadding(dp(8), 0, dp(8), 0)
+        }
+    }
+
+    private fun hairlineH(): View {
+        return View(this).apply {
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(1))
+            setBackgroundColor(colHairline)
+        }
+    }
+
+    private fun hairlineV(): View {
+        return View(this).apply {
+            layoutParams = LinearLayout.LayoutParams(dp(1), ViewGroup.LayoutParams.MATCH_PARENT)
+            setBackgroundColor(colHairline)
+        }
+    }
+
+    private fun boxBg(fillCol: Int, strokeCol: Int, strokePx: Int, radiusPx: Int): GradientDrawable {
         return GradientDrawable().apply {
-            setColor(Color.parseColor(fillHex))
-            setStroke(dp(1), Color.parseColor(strokeHex))
-            cornerRadius = cornerRadiusPx.toFloat()
+            setColor(fillCol)
+            setStroke(strokePx, strokeCol)
+            cornerRadius = radiusPx.toFloat()
         }
     }
 
