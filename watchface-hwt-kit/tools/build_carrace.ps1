@@ -1,4 +1,4 @@
-# Builds a retro "Car Race" LCD-game-watch style .hwt for Huawei Band 6 (HWHD07, 194x368)
+﻿# Builds a retro "Car Race" LCD-game-watch style .hwt for Huawei Band 6 (HWHD07, 194x368)
 # Layout positions follow model.pb (time/date/battery/weather/steps/HR/kcal slots).
 Add-Type -AssemblyName System.Drawing
 Add-Type -AssemblyName System.IO.Compression
@@ -156,7 +156,7 @@ public class CarRaceHwt {
                 g.DrawPath(ring, rp);
 
             // ---------- LCD window ----------
-            var lcdR = new RectangleF(5, 5, 184, 278);
+            var lcdR = new RectangleF(5, 5, 184, 358);
             using (var lp = RoundRect(lcdR, 7)) {
                 var lg = new LinearGradientBrush(lcdR, Color.White, Color.Gray, 90f);
                 var cb = new ColorBlend();
@@ -187,95 +187,66 @@ public class CarRaceHwt {
                 using (var dp = new Pen(ink, 1f)) g.DrawEllipse(dp, 185, 9, 4, 4);
                 using (var sep = new Pen(Color.FromArgb(90, INK), 1f)) g.DrawLine(sep, 9, 31, 185, 31);
 
-                // Left LCD annotations (fixed icons)
-                Txt(g, "ALM", 7.5f, ink, 10, 46);
-                // bell
+                // ---- Time area annotations (left column x 10..34, right column x 152..184) ----
+                Txt(g, "ALM", 7.5f, ink, 11, 46);
                 g.FillPie(inkBrush, 14, 58, 12, 12, 180, 180);
                 g.FillRectangle(inkBrush, 14, 63, 12, 4);
                 g.FillEllipse(inkBrush, 18, 67, 4, 4);
-                Txt(g, "SIG", 7.5f, inkSoft, 11, 84);
                 Txt(g, "AM", 7.5f, Color.FromArgb(40, INK), 12, 128);
-                Txt(g, "PM", 7.5f, ink, 12, 140);
-
-                // Right annotations
-                Txt(g, "TIME", 7.5f, ink, 156, 44);
-                Txt(g, "SEC", 7.5f, ink, 155, 113);
+                Txt(g, "PM", 7.5f, ink, 12, 142);
+                Txt(g, "TIME", 7.5f, ink, 155, 46);
+                Txt(g, "SEC", 7.5f, ink, 155, 112);
                 using (var ul = new Pen(ink, 1.5f)) g.DrawLine(ul, 154, 144, 174, 144);
+                using (var sep = new Pen(Color.FromArgb(90, INK), 1f)) g.DrawLine(sep, 9, 181, 185, 181);
 
-                // ---------- Race track (trapezoid) ----------
-                PointF[] trap = { new PointF(9, 279), new PointF(38, 186), new PointF(148, 184), new PointF(186, 279) };
-                using (var tf = new SolidBrush(Color.FromArgb(150, 120, 190, 176))) g.FillPolygon(tf, trap);
-                using (var tp = new Pen(ink, 2f)) g.DrawPolygon(tp, trap);
+                // ---- Race track (trapezoid) y 186..286 ----
+                PointF[] trap = { new PointF(9, 286), new PointF(36, 187), new PointF(150, 187), new PointF(185, 286) };
+                using (var tf = new SolidBrush(Color.FromArgb(140, 120, 190, 176))) g.FillPolygon(tf, trap);
+                using (var tp = new Pen(ink, 1.8f)) g.DrawPolygon(tp, trap);
 
-                // stepped speed scale (like the original track art)
-                PointF[] scale = { new PointF(20, 274), new PointF(62, 274), new PointF(92, 200), new PointF(84, 200), new PointF(58, 266), new PointF(24, 266) };
-                using (var sp = new Pen(ink, 1.6f)) g.DrawPolygon(sp, scale);
-                Txt(g, "300", 7f, ink, 68, 196);
-                Txt(g, "250", 7f, ink, 60, 214);
-                Txt(g, "ALM", 8f, ink, 22, 226);
-                Txt(g, "50 100 150", 6.5f, ink, 16, 254);
+                // speed scale + car, kept inside left half (x < 96)
+                PointF[] scale = { new PointF(22, 280), new PointF(60, 280), new PointF(88, 200), new PointF(81, 200), new PointF(55, 272), new PointF(25, 272) };
+                using (var sp = new Pen(ink, 1.4f)) g.DrawPolygon(sp, scale);
+                Txt(g, "300", 7f, ink, 62, 197);
+                Txt(g, "250", 7f, ink, 54, 216);
+                Txt(g, "50 100 150", 6.5f, ink, 20, 260);
+                g.FillRectangle(inkBrush, 30, 240, 22, 7);
+                g.FillRectangle(inkBrush, 36, 235, 10, 5);
+                g.FillRectangle(inkBrush, 27, 242, 3, 3);
+                g.FillEllipse(inkBrush, 31, 245, 6, 6);
+                g.FillEllipse(inkBrush, 45, 245, 6, 6);
 
-                // little race car sprite
-                g.FillRectangle(inkBrush, 30, 238, 22, 7);
-                g.FillRectangle(inkBrush, 36, 233, 10, 5);
-                g.FillRectangle(inkBrush, 27, 240, 3, 3);
-                g.FillEllipse(inkBrush, 31, 243, 6, 6);
-                g.FillEllipse(inkBrush, 45, 243, 6, 6);
-                using (var dash = new Pen(Color.FromArgb(110, INK), 1.4f) { DashPattern = new float[] { 3, 3 } })
-                    g.DrawLine(dash, 66, 276, 98, 190);
-
-                // stats labels (digits are right-aligned to x=170 at y=188/224/260)
-                Txt(g, "STEP", 7.5f, ink, 104, 191);
-                Txt(g, "PULSE", 7.5f, ink, 102, 227);
-                Txt(g, "KCAL", 7.5f, ink, 104, 263);
-                using (var ln = new Pen(Color.FromArgb(90, INK), 1f)) {
-                    g.DrawLine(ln, 104, 214, 182, 214);
-                    g.DrawLine(ln, 104, 250, 182, 250);
+                // stats labels; digits are right-aligned to x=170 at y=188/224/260
+                using (var div = new Pen(Color.FromArgb(110, INK), 1f)) g.DrawLine(div, 98, 192, 98, 280);
+                Txt(g, "STEP", 7.5f, ink, 103, 192);
+                Txt(g, "PULSE", 7.5f, ink, 103, 228);
+                Txt(g, "KCAL", 7.5f, ink, 103, 264);
+                using (var ln = new Pen(Color.FromArgb(80, INK), 1f)) {
+                    g.DrawLine(ln, 103, 215, 176, 215);
+                    g.DrawLine(ln, 103, 251, 180, 251);
                 }
-                Txt(g, "SIG", 6.5f, ink, 40, 196);
-                Txt(g, "km", 9f, ink, 38, 204, false, FontStyle.Bold | FontStyle.Italic);
-                g.FillRectangle(inkBrush, 104, 276, 74, 2);
+
+                // ---- GPS HUD panel (links to the Band 6 GPS HUD phone app) y 294..358 ----
+                var pr = new RectangleF(10, 294, 174, 62);
+                using (var pp = RoundRect(pr, 6))
+                using (var pf = new SolidBrush(Color.FromArgb(28, INK)))
+                using (var pe = new Pen(ink, 1.4f)) { g.FillPath(pf, pp); g.DrawPath(pe, pp); }
+                // checkered flag icon
+                for (int fy = 0; fy < 3; fy++)
+                    for (int fx = 0; fx < 4; fx++)
+                        if ((fx + fy) % 2 == 0) g.FillRectangle(inkBrush, 18 + fx * 4, 302 + fy * 4, 4, 4);
+                using (var fp = new Pen(ink, 1f)) { g.DrawRectangle(fp, 18, 302, 16, 12); g.DrawLine(fp, 18, 302, 18, 322); }
+                Txt(g, "GPS HUD", 13f, ink, 40, 300);
+                Txt(g, "NAV  SPEED  ODO", 7f, inkSoft, 41, 316);
+                using (var ln2 = new Pen(Color.FromArgb(80, INK), 1f)) g.DrawLine(ln2, 16, 330, 178, 330);
+                // music-control hint: prev / play / next
+                g.FillPolygon(inkBrush, new PointF[] { new PointF(26, 336), new PointF(19, 341), new PointF(26, 346) });
+                g.FillRectangle(inkBrush, 17, 336, 2, 10);
+                g.FillPolygon(inkBrush, new PointF[] { new PointF(36, 336), new PointF(43, 341), new PointF(36, 346) });
+                g.FillPolygon(inkBrush, new PointF[] { new PointF(50, 336), new PointF(57, 341), new PointF(50, 346) });
+                g.FillRectangle(inkBrush, 57, 336, 2, 10);
+                Txt(g, "Live di menu MUSIK", 8f, ink, 66, 335);
             }
-
-            // ---------- Black body: labels, buttons, plate ----------
-            Color white = Color.FromArgb(235, 238, 240);
-            Txt(g, "SEC/SPEED  TIME  ALM  GAME  PM", 7.5f, white, 97, 287, true);
-
-            // Silver ALARM band
-            using (var sb2 = Silver(new RectangleF(0, 299, 194, 16)))
-                g.FillPolygon(sb2, new PointF[] { new PointF(6, 300), new PointF(188, 300), new PointF(188, 314), new PointF(6, 314) });
-            using (var tab = new SolidBrush(Color.FromArgb(255, 18, 18, 20)))
-            using (var gp = new Pen(GOLD, 1f))
-            using (var gb = new SolidBrush(GOLD)) {
-                PointF[] lt = { new PointF(8, 301), new PointF(66, 301), new PointF(72, 313), new PointF(8, 313) };
-                PointF[] rt = { new PointF(186, 301), new PointF(128, 301), new PointF(122, 313), new PointF(186, 313) };
-                g.FillPolygon(tab, lt); g.DrawPolygon(gp, lt);
-                g.FillPolygon(tab, rt); g.DrawPolygon(gp, rt);
-                g.FillRectangle(gb, 11, 304, 5, 5);
-                g.FillRectangle(gb, 178, 304, 5, 5);
-                Txt(g, "LEFT", 7.5f, GOLD, 40, 302, true);
-                Txt(g, "RIGHT", 7.5f, GOLD, 152, 302, true);
-            }
-            Txt(g, "ALARM", 8f, Color.FromArgb(25, 25, 28), 97, 302, true);
-
-            // Red buttons
-            foreach (float bx in new float[] { 20f, 122f }) {
-                var br = new RectangleF(bx, 319, 52, 15);
-                using (var bp = RoundRect(br, 5))
-                using (var rb = new LinearGradientBrush(br, Color.FromArgb(240, 98, 70), Color.FromArgb(178, 46, 28), 90f))
-                using (var hl = new SolidBrush(Color.FromArgb(60, 255, 255, 255))) {
-                    g.FillPath(rb, bp);
-                    g.FillRectangle(hl, bx + 5, 321, 42, 3);
-                }
-            }
-
-            // Bottom plate
-            Txt(g, "RACING", 9.5f, white, 10, 343);
-            Txt(g, "CAR RACE", 9f, GOLD, 132, 344);
-            var plate = new RectangleF(70, 340, 54, 18);
-            using (var pp = RoundRect(plate, 4))
-            using (var sb3 = Silver(plate)) g.FillPath(sb3, pp);
-            Txt(g, "GD-6", 11f, Color.FromArgb(25, 25, 28), 97, 342, true);
 
             bmp.Save(path, ImageFormat.Png);
         }
@@ -385,7 +356,7 @@ public class CarRaceHwt {
             }
         }
 
-        string desc = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<HwTheme><title>Car Race GD-6</title><title-cn>Car Race GD-6</title-cn>\n" +
+        string desc = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<HwTheme><title>Band6 GPS Car Race</title><title-cn>Band6 GPS Car Race</title-cn>\n" +
                       "<author>Band6GPS</author><designer>Band6GPS</designer><screen>HWHD07</screen>\n" +
                       "<version>2.1.1</version><font>Default</font><font-cn>Default</font-cn></HwTheme>";
         if (File.Exists(outHwt)) File.Delete(outHwt);

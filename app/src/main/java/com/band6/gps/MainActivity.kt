@@ -372,8 +372,33 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        val btnExportHwt = Button(this).apply {
+            text = "📦 EKSPOR FILE .HWT (CAR RACE LCD) KE DOWNLOAD HP"
+            setBackgroundColor(Color.parseColor("#238636"))
+            setTextColor(Color.WHITE)
+            typeface = Typeface.DEFAULT_BOLD
+            val lp = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            lp.topMargin = dp(8)
+            layoutParams = lp
+            setOnClickListener {
+                val path = WatchFaceGenerator.exportBundledHwtToDownloads(this@MainActivity)
+                if (path != null) {
+                    Toast.makeText(
+                        this@MainActivity,
+                        "✅ File .HWT tersimpan di $path! Siap dipasang via Gadgetbridge / Huawei Health.",
+                        Toast.LENGTH_LONG
+                    ).show()
+                } else {
+                    Toast.makeText(this@MainActivity, "Gagal mengekspor file .HWT", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+
         val wfDesc = TextView(this).apply {
-            text = "📌 Cara Pasang Tanpa Mod/Root:\n1. Klik 'Simpan Watch Face ke Galeri HP' di atas.\n2. Buka aplikasi Huawei Health -> Perangkat -> Watch Faces -> pilih 'Gallery' (Galeri).\n3. Pilih gambar 194×368 yang baru disimpan, atur posisi jam di bagian atas (di dalam siku tanda kurung), lalu klik Save!\n*(Untuk file .hwt penuh bagi pengguna Gadgetbridge/Huawei Health Mod juga sudah tersedia di folder watchface-hwt-kit di GitHub).*"
+            text = "📌 Tersedia 2 Cara Pasang ke Huawei Band 6:\n• Cara 1 (Resmi Tanpa Mod): Klik 'Simpan ke Galeri HP', lalu buka Huawei Health -> Watch Faces -> Gallery -> pilih gambar Car Race LCD (sudah memuat data MAX km/j, ODO & ALT dari aplikasi ini!).\n• Cara 2 (File .HWT Penuh): Klik 'Ekspor File .HWT ke Download HP' lalu pasang file CarRace_GD6_Band6.hwt lewat Gadgetbridge / Huawei Health."
             setTextColor(Color.parseColor("#8B949E"))
             textSize = 12f
             setPadding(0, dp(10), 0, 0)
@@ -384,6 +409,7 @@ class MainActivity : AppCompatActivity() {
         wfCard.addView(ivWatchFacePreview)
         wfCard.addView(btnSwitchTheme)
         wfCard.addView(btnSaveWatchFace)
+        wfCard.addView(btnExportHwt)
         wfCard.addView(wfDesc)
         root.addView(wfCard)
 
