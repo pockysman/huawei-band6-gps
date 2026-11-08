@@ -353,7 +353,7 @@ class MainActivity : AppCompatActivity() {
             setPadding(dp(16), dp(18), dp(16), dp(18))
         }
 
-        // Section Header (01 / WRIST MEDIASESSION HUD VIEWPORT)
+        // Section Header (01 / WRIST NOTIFICATION HUD VIEWPORT)
         val headerRow = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
@@ -361,19 +361,19 @@ class MainActivity : AppCompatActivity() {
         }
         val idx = monoLabel("01 / ", colBrass, 11f)
         val title = TextView(this).apply {
-            text = "WRIST MEDIASESSION HUD VIEWPORT"
+            text = "WRIST NOTIFICATION HUD VIEWPORT"
             setTextColor(colTextPrimary)
             typeface = Typeface.create(Typeface.SANS_SERIF, Typeface.BOLD)
             textSize = 13f
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
         }
-        tvHudPageMeta = monoLabel("MODE 1/4", colTextMuted, 10.5f)
+        tvHudPageMeta = monoLabel("AUTO-WAKE POP-UP", colSignalOk, 10.5f)
         headerRow.addView(idx)
         headerRow.addView(title)
         headerRow.addView(tvHudPageMeta)
         sec.addView(headerRow)
 
-        // Metallic Bezel Frame housing the Reflective STN-LCD Screen
+        // Metallic Bezel Frame housing the Reflective STN-LCD Notification Card
         val bezel = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             background = boxBg(colRecessed, Color.parseColor("#9FA6A2"), dp(2), dp(2))
@@ -384,10 +384,10 @@ class MainActivity : AppCompatActivity() {
             orientation = LinearLayout.HORIZONTAL
             setPadding(0, 0, 0, dp(8))
         }
-        bezelHeader.addView(monoLabel("RACING TELEMETRY", colTextSecondary, 10f).apply {
+        bezelHeader.addView(monoLabel("BAND 6 NOTIFICATION CARD", colTextSecondary, 10f).apply {
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
         })
-        bezelHeader.addView(monoLabel("CAR RACE GD-6", colBrass, 10f))
+        bezelHeader.addView(monoLabel("VIBRATION ON", colBrass, 10f))
         bezel.addView(bezelHeader)
 
         // Reflective Olive STN-LCD Screen (#C9D1A8)
@@ -401,7 +401,7 @@ class MainActivity : AppCompatActivity() {
             orientation = LinearLayout.HORIZONTAL
             setPadding(0, 0, 0, dp(6))
         }
-        tvLcdModeTag = monoLabel("MODE 01: NAV+SPD", colLcdInk, 10.5f).apply {
+        tvLcdModeTag = monoLabel("NOTIF: NAVIGATION PRIORITY", colLcdInk, 10.5f).apply {
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
         }
         tvLcdEtaTag = monoLabel("STANDBY", colLcdInk, 10.5f)
@@ -435,10 +435,10 @@ class MainActivity : AppCompatActivity() {
             background = boxBg(colLcdTeal, colLcdInk, dp(1), 0)
             setPadding(dp(10), dp(6), dp(10), dp(6))
         }
-        tealStrip.addView(monoLabel("ALM 50 100 150 250 300", colLcdInk, 10f).apply {
+        tealStrip.addView(monoLabel("AUTO-WAKE SCREEN • POP-UP OVER WATCHFACE", colLcdInk, 9.5f).apply {
             layoutParams = LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f)
         })
-        tvLcdTrapezoidRight = monoLabel("SIG 0.0 km", colLcdInk, 10f)
+        tvLcdTrapezoidRight = monoLabel("SIG 0.0 km", colLcdInk, 9.5f)
         tealStrip.addView(tvLcdTrapezoidRight)
 
         lcdScreen.addView(lcdTopRow)
@@ -449,49 +449,33 @@ class MainActivity : AppCompatActivity() {
         bezel.addView(lcdScreen)
         sec.addView(bezel)
 
-        // Tactile 3-Key Switch Bank (< LEFT / PULSE / RIGHT >)
+        // Tactile Action Keys: PULSE TEST NOTIF + SIMULATE MANEUVER
         val keyRow1 = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             setPadding(0, dp(10), 0, 0)
         }
-        val btnPrev = mechButton("< PREV MODE", colKey, colBorderStrong, colTextPrimary).apply {
-            layoutParams = LinearLayout.LayoutParams(0, dp(42), 1f).apply { rightMargin = dp(6) }
-            setOnClickListener {
-                GpsNavRepository.previousHudPage()
-                notifyServiceRefresh(false)
-            }
-        }
-        val btnPulse = mechButton("PULSE WRIST", colCrimson, Color.parseColor("#E0533F"), Color.WHITE).apply {
-            layoutParams = LinearLayout.LayoutParams(0, dp(42), 1f).apply { rightMargin = dp(6) }
+        val btnPulse = mechButton("TEST WRIST NOTIFICATION", colCrimson, Color.parseColor("#E0533F"), Color.WHITE).apply {
+            layoutParams = LinearLayout.LayoutParams(0, dp(42), 1.2f).apply { rightMargin = dp(6) }
             setOnClickListener { triggerTestAlertOnWrist() }
         }
-        val btnNext = mechButton("NEXT MODE >", colKey, colBorderStrong, colTextPrimary).apply {
+        val btnSimTurn = mechButton("SIMULATE MANEUVER", colKey, colBorderStrong, colTextPrimary).apply {
             layoutParams = LinearLayout.LayoutParams(0, dp(42), 1f)
-            setOnClickListener {
-                GpsNavRepository.nextHudPage()
-                notifyServiceRefresh(false)
-            }
+            setOnClickListener { simulateTurnAndVibrateWrist() }
         }
-        keyRow1.addView(btnPrev)
         keyRow1.addView(btnPulse)
-        keyRow1.addView(btnNext)
+        keyRow1.addView(btnSimTurn)
         sec.addView(keyRow1)
 
-        // Primary Service Toggle + Turn Simulator Row
+        // Primary Service Toggle Row
         val keyRow2 = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             setPadding(0, dp(8), 0, 0)
         }
-        btnToggleService = mechButton("ENGAGE HUD BRIDGE", colCrimson, Color.parseColor("#E0533F"), Color.WHITE).apply {
-            layoutParams = LinearLayout.LayoutParams(0, dp(46), 1.3f).apply { rightMargin = dp(6) }
+        btnToggleService = mechButton("ENGAGE NOTIFICATION HUD", colCrimson, Color.parseColor("#E0533F"), Color.WHITE).apply {
+            layoutParams = LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(46))
             setOnClickListener { toggleGpsService() }
         }
-        val btnSimTurn = mechButton("SIMULATE MANEUVER", colKey, colBrass, colBrass).apply {
-            layoutParams = LinearLayout.LayoutParams(0, dp(46), 1f)
-            setOnClickListener { simulateTurnAndVibrateWrist() }
-        }
         keyRow2.addView(btnToggleService)
-        keyRow2.addView(btnSimTurn)
         sec.addView(keyRow2)
 
         return sec
@@ -677,13 +661,13 @@ class MainActivity : AppCompatActivity() {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(colRecessed)
             setPadding(dp(16), dp(12), dp(16), dp(12))
-            addView(monoLabel("TRANSPORT: ANDROID MEDIASESSION + NOTIFICATION LISTENER BRIDGE", colTextMuted, 9.5f))
+            addView(monoLabel("TRANSPORT: SMART NOTIFICATION BRIDGE (HUAWEI HEALTH BLE RELAY)", colTextMuted, 9.5f))
         }
     }
 
     private fun renderSnapshot(snap: GpsNavSnapshot) {
-        val cleanTitle = stripEmojis(snap.buildBandHudTitle())
-        val cleanSub = stripEmojis(snap.buildBandHudSubtitle())
+        val cleanTitle = stripEmojis(snap.buildNotificationAlertTitle())
+        val cleanSub = stripEmojis(snap.buildNotificationAlertBody())
 
         tvVelocityValue.text = "${snap.speedKmh.roundToInt()} km/h"
         tvVelocityBar.text = "${snap.visualSpeedBar(snap.speedLimitAlertKmh)} LIM ${snap.speedLimitAlertKmh} KM/H"
@@ -693,10 +677,9 @@ class MainActivity : AppCompatActivity() {
         tvCompassValue.text = "${snap.compassCardinal()} ${String.format(Locale.US, "%03d", snap.bearingDeg.roundToInt())}°"
         tvCoordsValue.text = String.format(Locale.US, "%.5f, %.5f", snap.latitude, snap.longitude)
 
-        val pageOrd = snap.activeHudPage.ordinal + 1
-        tvHudPageMeta.text = "PAGE $pageOrd/4"
-        tvLcdModeTag.text = snap.activeHudPage.title.uppercase(Locale.US)
-        tvLcdEtaTag.text = if (snap.isMapsActive) "ETA ${snap.etaSummary}" else "GPS STANDBY"
+        tvHudPageMeta.text = "AUTO-WAKE POP-UP"
+        tvLcdModeTag.text = if (snap.isMapsActive) "NOTIF: MAPS NAVIGATION" else "NOTIF: GPS TELEMETRY"
+        tvLcdEtaTag.text = if (snap.isMapsActive) "ETA ${snap.etaSummary}" else "STANDBY"
         tvBandHudTitle.text = cleanTitle
         tvBandHudSubtitle.text = cleanSub
         tvLcdTrapezoidRight.text = "SIG ${snap.formattedTripDistance()}"
@@ -705,14 +688,14 @@ class MainActivity : AppCompatActivity() {
             viewBridgeLed.setBackgroundColor(colSignalOk)
             tvBridgeState.text = "BRIDGE: ACTIVE"
             tvBridgeState.setTextColor(colTextPrimary)
-            btnToggleService.text = "TERMINATE BRIDGE"
+            btnToggleService.text = "TERMINATE NOTIFICATION HUD"
             btnToggleService.background = boxBg(colKey, colCrimson, dp(1), dp(2))
             btnToggleService.setTextColor(colCrimson)
         } else {
             viewBridgeLed.setBackgroundColor(colBrass)
             tvBridgeState.text = "BRIDGE: STANDBY"
             tvBridgeState.setTextColor(colTextSecondary)
-            btnToggleService.text = "ENGAGE HUD BRIDGE"
+            btnToggleService.text = "ENGAGE NOTIFICATION HUD"
             btnToggleService.background = boxBg(colCrimson, Color.parseColor("#E0533F"), dp(1), dp(2))
             btnToggleService.setTextColor(Color.WHITE)
         }
@@ -763,7 +746,7 @@ class MainActivity : AppCompatActivity() {
             startService(intent)
         } else {
             ContextCompat.startForegroundService(this, intent)
-            Toast.makeText(this, "HUD Bridge engaged. Open Music Control on Huawei Band 6.", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "Notification HUD engaged. Turn pop-ups will alert Huawei Band 6.", Toast.LENGTH_LONG).show()
         }
     }
 

@@ -556,40 +556,40 @@
 
     <!-- Main Split Workbench -->
     <div class="workbench">
-      <!-- Left Pane: Live Band 6 MediaSession HUD & Mechanical Controls -->
+      <!-- Left Pane: Live Band 6 Notification HUD & Mechanical Controls -->
       <section class="pane-left" aria-labelledby="hud-heading">
         <div class="section-head">
           <div>
             <span class="section-index">01</span>
-            <span class="section-title" id="hud-heading">WRIST MEDIASESSION HUD VIEWPORT</span>
+            <span class="section-title" id="hud-heading">WRIST NOTIFICATION HUD VIEWPORT</span>
           </div>
-          <span class="section-meta" id="txtActivePage">PAGE 1/4 • NAV + SPEED</span>
+          <span class="section-meta" id="txtActivePage">AUTO-WAKE POP-UP • VIBRATION ON</span>
         </div>
 
         <div class="lcd-bezel">
           <div class="lcd-bezel-header">
-            <span>RACING TELEMETRY</span>
-            <span class="gold">CAR RACE GD-6</span>
+            <span>BAND 6 NOTIFICATION CARD</span>
+            <span class="gold">VIBRATION ON</span>
           </div>
           <div class="stn-lcd-screen">
             <div class="lcd-top-bar">
-              <span id="lcdModeTag">MODE 01: NAV+SPD</span>
+              <span id="lcdModeTag">NOTIF: NAVIGATION PRIORITY</span>
               <span id="lcdEtaTag">ETA 15:20 • 2.4 KM</span>
             </div>
-            <div class="lcd-main-title" id="lcdTitle">[L] 120 m • 54 km/j</div>
+            <div class="lcd-main-title" id="lcdTitle">[L] 120 m (54 km/j)</div>
             <div class="lcd-sub-line" id="lcdSubtitle">Belok kiri ke Jl. Jend. Sudirman</div>
             <div class="lcd-trapezoid-bar">
-              <span>ALM 50 100 150 250 300</span>
+              <span>AUTO-WAKE SCREEN • POP-UP OVER WATCHFACE</span>
               <span id="lcdTrapezoidRight">SIG 3.4 km</span>
             </div>
           </div>
         </div>
 
-        <!-- Physical-Style Casio GD-8 Switch Bank -->
+        <!-- Tactile Action Keys -->
         <div class="key-row">
-          <button type="button" class="mech-key" id="btnPrevMode">&lt; LEFT / PREV MODE</button>
-          <button type="button" class="mech-key crimson" id="btnPulseWrist">PULSE WRIST ALERT</button>
-          <button type="button" class="mech-key" id="btnNextMode">RIGHT / NEXT MODE &gt;</button>
+          <button type="button" class="mech-key crimson" id="btnPulseWrist">TEST WRIST NOTIFICATION</button>
+          <button type="button" class="mech-key" id="btnSimTurn">NEXT MAPS MANEUVER</button>
+          <button type="button" class="mech-key brass-border" id="btnToggleService">TERMINATE NOTIFICATION HUD</button>
         </div>
 
         <div class="control-group">
@@ -604,9 +604,7 @@
             <span id="lblSimBearing">315° BL</span>
           </div>
           <div class="key-row">
-            <button type="button" class="mech-key" id="btnSimTurn">NEXT MAPS MANEUVER</button>
             <button type="button" class="mech-key" id="btnResetOdo">ZERO ODOMETER</button>
-            <button type="button" class="mech-key brass-border" id="btnToggleService">TERMINATE BRIDGE</button>
           </div>
         </div>
       </section>
@@ -671,7 +669,7 @@
     </div>
 
     <footer class="protocol-footer">
-      <span>PROTOCOL: ANDROID NOTIFICATION LISTENER + MEDIASESSION METADATA TRANSPORT</span>
+      <span>PROTOCOL: ANDROID NOTIFICATION LISTENER + SMART NOTIFICATION POP-UP RELAY</span>
       <span>HUAWEI HEALTH / GADGETBRIDGE COMPATIBLE</span>
     </footer>
   </main>
@@ -899,15 +897,21 @@
       }
     }
 
-    document.getElementById('btnPrevMode').addEventListener('click', () => {
-      state.pageIndex = (state.pageIndex + 3) % 4;
-      renderHud();
-    });
+    const btnPrev = document.getElementById('btnPrevMode');
+    if (btnPrev) {
+      btnPrev.addEventListener('click', () => {
+        state.pageIndex = (state.pageIndex + 3) % 4;
+        renderHud();
+      });
+    }
 
-    document.getElementById('btnNextMode').addEventListener('click', () => {
-      state.pageIndex = (state.pageIndex + 1) % 4;
-      renderHud();
-    });
+    const btnNext = document.getElementById('btnNextMode');
+    if (btnNext) {
+      btnNext.addEventListener('click', () => {
+        state.pageIndex = (state.pageIndex + 1) % 4;
+        renderHud();
+      });
+    }
 
     document.getElementById('btnSimTurn').addEventListener('click', () => {
       state.turnIndex = (state.turnIndex + 1) % turns.length;
@@ -933,11 +937,11 @@
       if (state.running) {
         led.className = 'led ok';
         txt.textContent = 'BRIDGE: ACTIVE';
-        e.target.textContent = 'TERMINATE BRIDGE';
+        e.target.textContent = 'TERMINATE NOTIFICATION HUD';
       } else {
         led.className = 'led warn';
         txt.textContent = 'BRIDGE: STANDBY';
-        e.target.textContent = 'ENGAGE HUD BRIDGE';
+        e.target.textContent = 'ENGAGE NOTIFICATION HUD';
       }
     });
 

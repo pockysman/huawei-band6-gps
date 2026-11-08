@@ -37,18 +37,14 @@ Silakan unduh file siap pakai melalui halaman **[GitHub Releases Resmi](https://
 
 ## ✨ Fitur Utama
 
-### 1. Live GPS HUD di Layar Kontrol Musik (`MediaSession`) — *Tanpa Getaran Berisik*
-Huawei Band 6 tidak mendukung instalasi aplikasi pihak ketiga secara langsung di dalam memori gelang. Proyek ini menyulap menu **Kontrol Musik** di Huawei Band 6 menjadi layar **Live HUD GPS** yang diperbarui setiap detik tanpa menggetarkan gelang terus-menerus:
-* **Interaktif 2 Arah dari Pergelangan Tangan:** Tekan tombol **Next (`⏭️`)** atau **Prev (`⏮️`)** di layar Huawei Band 6 untuk berpindah antar **4 Mode Layar HUD**:
-  1. **Mode 1 — Navigasi + Speed:** `⬅️ 150 m • 42 km/j` | `Jl. Jend. Sudirman (14:30)`
-  2. **Mode 2 — Visual Bar & Tachometer:** `⚡42 [████░░░░]` | `.. B | [BL 315°] | U ..`
-  3. **Mode 3 — Speedometer & Odometer:** `⚡ 42 km/j (Maks 68)` | `📏 3.42 km • 🧭 TL • ⛰️ 120m`
-  4. **Mode 4 — Koordinat & Akurasi GPS:** `📍 -6.20876, 106.84560` | `🎯 ±4m • ⚡ 42 km/j • 🧭 U`
-* Tekan tombol **Play/Pause (`⏯️`)** di Huawei Band 6 kapan saja untuk memunculkan *popup* detail navigasi lengkap di layar gelang.
-
-### 2. Getaran Pintar Saat Mendekati Belokan (`NotificationListener`)
-* Membaca notifikasi navigasi aktif dari **Google Maps** dan **Waze** secara otomatis (`⬅️`, `➡️`, `⬆️`, `↩️`, `🔄`, `🏁`).
-* Dilengkapi fitur *Smart Anti-Spam Cooldown*: gelang **hanya bergetar** ketika instruksi belokan berubah, menyentuh jarak kritis (`200m`, `150m`, `100m`, `50m`, `30m`, `15m`), atau saat kecepatan kendaraan Anda melewati batas aman (`80 km/jam`).
+### 1. Smart Notification HUD di Layar Huawei Band 6 (Layar Otomatis Menyala & Bergetar)
+Pendekatan utama yang digunakan adalah **Direct Notification HUD** yang diteruskan secara instan oleh Huawei Health ke layar Huawei Band 6:
+* **Layar Otomatis Menyala (*Auto-Wake AMOLED*):** Anda tidak perlu repot menggeser (*swipe*) ke menu Kontrol Musik. Layar Huawei Band 6 akan menyala otomatis dan menampilkan jendela *pop-up* di atas Watch Face utama Anda saat instruksi belokan atau peringatan kecepatan tiba.
+* **Getaran Pintar Belokan Google Maps & Waze:** Begitu mendekati belokan atau persimpangan (ambang kritis `500m`, `300m`, `200m`, `100m`, `50m`, `20m`), gelang akan bergetar dan menampilkan:
+  * **Judul:** `⬅️ 150 m (45 km/j)` *(Arah panah + Jarak belokan + Kecepatan saat ini)*
+  * **Isi Pesan:** `Jl. Jend. Sudirman • ETA 14:35 (2.5 km)`
+* **Peringatan Batas Kecepatan (*Speed Limit Alert*):** Gelang bergetar instan saat laju kendaraan melewati batas aman (misal `> 80 km/jam`).
+* **Bebas Memutar Musik di HP:** Pendekatan notifikasi ini tidak membajak pemutar musik ponsel Anda, sehingga Anda tetap bisa mendengarkan lagu di Spotify atau YouTube di ponsel secara normal selama berkendara!
 
 ### 3. Studio Custom Watch Face (`194×368` Piksel) & Integrasi Langsung **HookUtils v1.2.7_p2**
 Di dalam aplikasi Android tersedia fitur **HWHD07 Watch Face Studio** yang telah terintegrasi penuh dengan modul **`HookUtils-1.2.7_p2-20240602-R.apk` (`cn.wwl.xposed.hook`)** serta **On-Device `.HWT` Binary Compiler (`HwtCompiler.kt`)**:
@@ -68,9 +64,8 @@ Di dalam aplikasi Android tersedia fitur **HWHD07 Watch Face Studio** yang telah
 2. Buka aplikasi **Band 6 GPS HUD**, lalu berikan izin **Lokasi (GPS)** dan **Notifikasi**.
 3. Ketuk tombol biru **"🔔 Berikan Izin Baca Rute Google Maps (Wajib)"**, lalu aktifkan izin untuk **Band 6 Google Maps Reader**.
 4. Buka aplikasi **Huawei Health** di HP Anda:
-   * Masuk ke menu **Perangkat (Devices)** $\rightarrow$ **Huawei Band 6** $\rightarrow$ **Notifikasi (Notifications)** $\rightarrow$ centang aplikasi **Band 6 GPS HUD**.
-   * Masuk ke **Pengaturan Perangkat (Device Settings)** $\rightarrow$ pastikan **Kontrol Musik (Music Control)** sudah diaktifkan.
-5. Kembali ke aplikasi **Band 6 GPS HUD**, ketuk **"🚀 AKTIFKAN GPS HUD KE HUAWEI BAND 6"**, lalu ketuk **"🧪 Simulasi Belokan Maps + Tes Getar Band 6"** untuk menguji getaran navigasi di gelang Anda.
+   * Masuk ke menu **Perangkat (Devices)** $\rightarrow$ **Huawei Band 6** $\rightarrow$ **Notifikasi (Notifications)** $\rightarrow$ pastikan izin notifikasi aktif dan centang aplikasi **Band 6 GPS HUD**.
+5. Kembali ke aplikasi **Band 6 GPS HUD**, ketuk tombol **"ENGAGE NOTIFICATION HUD"**, lalu ketuk **"TEST WRIST NOTIFICATION"** atau **"SIMULATE MANEUVER"** untuk menguji getaran dan pop-up navigasi di gelang Anda.
 
 ### Langkah 2: Memasang Custom Watch Face "Retro Car Race LCD"
 * **Cara Resmi (Tanpa Mod/Root):**

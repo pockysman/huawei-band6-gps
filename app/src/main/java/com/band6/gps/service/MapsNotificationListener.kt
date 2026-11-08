@@ -106,9 +106,14 @@ class MapsNotificationListener : NotificationListenerService() {
 
     private fun shouldAlertDistanceMilestone(oldDist: String, newDist: String): Boolean {
         if (oldDist == newDist) return false
-        val meters = parseMeters(newDist) ?: return false
-        // Kirim getaran peringatan ke Huawei Band 6 saat jarak tepat menyentuh ambang kritis (200m, 100m, 50m, 20m)
-        return meters in listOf(200, 150, 100, 50, 30, 15)
+        val oldM = parseMeters(oldDist)
+        val newM = parseMeters(newDist) ?: return false
+        // Memicu notifikasi saat jarak mendekati persimpangan melewati ambang kunci (500m, 300m, 200m, 100m, 50m, 20m)
+        val milestones = intArrayOf(500, 300, 200, 100, 50, 20)
+        for (m in milestones) {
+            if (newM <= m && (oldM == null || oldM > m)) return true
+        }
+        return false
     }
 
     private fun parseMeters(distStr: String): Int? {

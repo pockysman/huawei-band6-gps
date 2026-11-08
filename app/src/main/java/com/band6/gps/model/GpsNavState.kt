@@ -63,7 +63,34 @@ data class GpsNavSnapshot(
     }
 
     /**
-     * Menghasilkan baris utama (Judul) untuk layar Kontrol Musik Huawei Band 6
+     * Judul ringkas untuk kartu notifikasi pop-up di layar Huawei Band 6 (194x368)
+     */
+    fun buildNotificationAlertTitle(): String {
+        val spd = speedKmh.roundToInt()
+        return if (isMapsActive) {
+            "$directionArrow $distanceToTurn ($spd km/j)"
+        } else {
+            "🧭 ${compassCardinal()} ${bearingDeg.roundToInt()}° • $spd km/j"
+        }
+    }
+
+    /**
+     * Isi pesan detail untuk kartu notifikasi pop-up di layar Huawei Band 6 (194x368)
+     */
+    fun buildNotificationAlertBody(): String {
+        return if (isMapsActive) {
+            if (etaSummary.isNotEmpty() && etaSummary != "--:--") {
+                "$nextStreetName • ETA $etaSummary"
+            } else {
+                nextStreetName
+            }
+        } else {
+            "ODO ${formattedTripDistance()} • ALT ${altitudeMeters.roundToInt()}m"
+        }
+    }
+
+    /**
+     * Menghasilkan baris utama (Judul) untuk layar status / HUD Huawei Band 6
      */
     fun buildBandHudTitle(): String {
         val spd = speedKmh.roundToInt()

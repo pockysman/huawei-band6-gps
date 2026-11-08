@@ -10,7 +10,6 @@
     <!-- Izin Foreground Service & Notifikasi untuk meneruskan data ke Huawei Band 6 -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!-- Izin Instalasi Paket & Penyimpanan untuk HookUtils / .HWT Direct Installer -->
@@ -73,12 +72,12 @@
                 android:resource="@xml/file_paths" />
         </provider>
 
-        <!-- Foreground Service: Pelacak Kecepatan GPS + MediaSession HUD + Push Notifikasi -->
+        <!-- Foreground Service: Pelacak Kecepatan GPS + Smart Notification Wrist HUD -->
         <service
             android:name=".service.BandGpsForegroundService"
             android:enabled="true"
             android:exported="false"
-            android:foregroundServiceType="location|mediaPlayback" />
+            android:foregroundServiceType="location" />
 
         <!-- Notification Listener: Membaca Instruksi Arah Google Maps secara Real-Time -->
         <service
