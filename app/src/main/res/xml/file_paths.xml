@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <cache-path name="hwt_themes" path="hwt_themes/" />
+    <cache-path name="hookutils_apk" path="hookutils_apk/" />
+    <external-path name="external_downloads" path="Download/" />
+</paths>

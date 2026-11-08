@@ -13,6 +13,22 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
+    <!-- Izin Instalasi Paket & Penyimpanan untuk HookUtils / .HWT Direct Installer -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+
+    <!-- Visibilitas Paket untuk deteksi Huawei Health, HookUtils, & Gadgetbridge di Android 11+ -->
+    <queries>
+        <package android:name="com.huawei.health" />
+        <package android:name="cn.wwl.xposed.hook" />
+        <package android:name="nodomain.freeyourgadget.gadgetbridge" />
+        <intent>
+            <action android:name="android.intent.action.VIEW" />
+            <data android:mimeType="application/octet-stream" />
+        </intent>
+    </queries>
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
@@ -21,6 +37,20 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Material3.Dark.NoActionBar"
         tools:targetApi="34">
+
+        <!-- Integrasi Modul Xposed / LSPosed / LSPatch HookUtils v1.2.7_p2 untuk Huawei Health -->
+        <meta-data
+            android:name="xposedmodule"
+            android:value="true" />
+        <meta-data
+            android:name="xposeddescription"
+            android:value="Band 6 GPS HUD + HookUtils v1.2.7_p2 (Direct Huawei Health .HWT WatchFace Installer)" />
+        <meta-data
+            android:name="xposedminversion"
+            android:value="82" />
+        <meta-data
+            android:name="xposedscope"
+            android:resource="@array/xposed_scope" />
 
         <activity
             android:name=".MainActivity"
@@ -31,6 +61,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- FileProvider untuk membagikan file .HWT dan HookUtils.apk secara langsung -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
 
         <!-- Foreground Service: Pelacak Kecepatan GPS + MediaSession HUD + Push Notifikasi -->
         <service

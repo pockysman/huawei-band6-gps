@@ -26,6 +26,8 @@ import com.band6.gps.model.GpsNavRepository
 import com.band6.gps.model.GpsNavSnapshot
 import com.band6.gps.service.BandGpsForegroundService
 import com.band6.gps.service.MapsNotificationListener
+import com.band6.gps.util.DirectThemeInstaller
+import com.band6.gps.util.HwtCompiler
 import com.band6.gps.util.WatchFaceGenerator
 import java.util.Locale
 import kotlin.math.roundToInt
@@ -71,6 +73,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var btnToggleService: Button
     private lateinit var ivWatchFacePreview: ImageView
+    private lateinit var tvHookBridgeStatus: TextView
     private val themeButtons = mutableListOf<Button>()
 
     private var selectedThemeIndex = 0
@@ -90,6 +93,7 @@ class MainActivity : AppCompatActivity() {
         super.onStart()
         GpsNavRepository.addListener(stateListener)
         updateNotificationListenerState()
+        updateHookBridgeStatus()
     }
 
     override fun onStop() {
@@ -563,11 +567,49 @@ class MainActivity : AppCompatActivity() {
             rightCol.addView(btn)
         }
 
-        val btnSaveGallery = mechButton("SAVE 194×368 PNG", colCrimson, Color.parseColor("#E0533F"), Color.WHITE).apply {
+        val btnDirectPush = mechButton("DIRECT INSTALL .HWT TO BAND 6", colCrimson, Color.parseColor("#E0533F"), Color.WHITE).apply {
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                dp(40)
+                dp(42)
             ).apply { topMargin = dp(6) }
+            setOnClickListener {
+                val msg = DirectThemeInstaller.compileAndPushThemeToBand(
+                    this@MainActivity,
+                    GpsNavRepository.state,
+                    themes[selectedThemeIndex]
+                )
+                Toast.makeText(this@MainActivity, msg, Toast.LENGTH_LONG).show()
+                updateHookBridgeStatus()
+            }
+        }
+
+        val btnHookUtils = mechButton("INSTALL / OPEN HOOKUTILS v1.2.7", colKey, colBrass, colBrass).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                dp(38)
+            ).apply { topMargin = dp(5) }
+            setOnClickListener {
+                val msg = DirectThemeInstaller.installOrOpenBundledHookUtils(this@MainActivity)
+                Toast.makeText(this@MainActivity, msg, Toast.LENGTH_LONG).show()
+                updateHookBridgeStatus()
+            }
+        }
+
+        rightCol.addView(btnDirectPush)
+        rightCol.addView(btnHookUtils)
+
+        splitRow.addView(ivWatchFacePreview)
+        splitRow.addView(rightCol)
+        sec.addView(splitRow)
+
+        // Secondary Export Row: 194x368 Gallery PNG + Raw .HWT Binary
+        val secondaryRow = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(0, dp(10), 0, 0)
+        }
+
+        val btnSaveGallery = mechButton("SAVE 194×368 PNG", colKey, colBorderStrong, colTextPrimary).apply {
+            layoutParams = LinearLayout.LayoutParams(0, dp(38), 1f).apply { rightMargin = dp(6) }
             setOnClickListener {
                 val savedPath = WatchFaceGenerator.saveWatchFaceToGallery(
                     this@MainActivity,
@@ -577,7 +619,7 @@ class MainActivity : AppCompatActivity() {
                 if (savedPath != null) {
                     Toast.makeText(
                         this@MainActivity,
-                        "Saved to $savedPath (Apply via Huawei Health -> Watch Faces -> Gallery)",
+                        "Saved to $savedPath (Huawei Health -> Watch Faces -> Gallery)",
                         Toast.LENGTH_LONG
                     ).show()
                 } else {
@@ -586,38 +628,45 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        val btnExportHwt = mechButton("EXPORT .HWT BINARY", colKey, colBrass, colBrass).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                dp(40)
-            ).apply { topMargin = dp(6) }
+        val btnExportHwt = mechButton("COMPILE .HWT TO DOWNLOAD", colKey, colBorderStrong, colTextPrimary).apply {
+            layoutParams = LinearLayout.LayoutParams(0, dp(38), 1f)
             setOnClickListener {
-                val path = WatchFaceGenerator.exportBundledHwtToDownloads(this@MainActivity)
-                if (path != null) {
-                    Toast.makeText(
-                        this@MainActivity,
-                        "Exported HWHD07 binary to $path",
-                        Toast.LENGTH_LONG
-                    ).show()
-                } else {
-                    Toast.makeText(this@MainActivity, "Failed to export .HWT", Toast.LENGTH_SHORT).show()
-                }
+                val hwtFile = HwtCompiler.compileAndSaveHwtFile(
+                    this@MainActivity,
+                    GpsNavRepository.state,
+                    themes[selectedThemeIndex]
+                )
+                val outPath = DirectThemeInstaller.saveHwtToPublicDownloads(
+                    this@MainActivity,
+                    hwtFile.name,
+                    hwtFile.readBytes()
+                )
+                Toast.makeText(
+                    this@MainActivity,
+                    "Compiled ${hwtFile.name} (HWHD07 v2.1.1) -> $outPath",
+                    Toast.LENGTH_LONG
+                ).show()
             }
         }
 
-        rightCol.addView(btnSaveGallery)
-        rightCol.addView(btnExportHwt)
+        secondaryRow.addView(btnSaveGallery)
+        secondaryRow.addView(btnExportHwt)
+        sec.addView(secondaryRow)
 
-        splitRow.addView(ivWatchFacePreview)
-        splitRow.addView(rightCol)
-        sec.addView(splitRow)
-
-        val specNote = monoLabel(
-            "GALLERY MODE: Saves 194×368 PNG with your Peak KM/H & Trip Odometer stamped.\n" +
-                "BINARY MODE: Exports CarRace_GD6_Band6.hwt (HWHD07 v2.1.1) to Downloads.",
-            colTextMuted,
+        // HookUtils Bridge Diagnostic Strip
+        tvHookBridgeStatus = monoLabel(
+            "HOOKUTILS BRIDGE: EMBEDDED XPOSED MODULE ACTIVE",
+            colSignalOk,
             10f
         ).apply { setPadding(0, dp(12), 0, 0) }
+        sec.addView(tvHookBridgeStatus)
+
+        val specNote = monoLabel(
+            "DIRECT INSTALL: Compiles any of the 4 themes into a real HWHD07 v2.1.1 .HWT binary,\n" +
+                "copies path to Clipboard, and launches Huawei Health (HookUtils) or Gadgetbridge.",
+            colTextMuted,
+            9.5f
+        ).apply { setPadding(0, dp(6), 0, 0) }
         sec.addView(specNote)
 
         return sec
@@ -771,6 +820,15 @@ class MainActivity : AppCompatActivity() {
             tvMapsPermissionState.text = "MAPS: TAP TO BIND"
             tvMapsPermissionState.setTextColor(colBrass)
         }
+    }
+
+    private fun updateHookBridgeStatus() {
+        if (!::tvHookBridgeStatus.isInitialized) return
+        val status = DirectThemeInstaller.getBridgeStatus(this)
+        tvHookBridgeStatus.text = status.statusSummary()
+        tvHookBridgeStatus.setTextColor(
+            if (status.huaweiHealthInstalled || status.gadgetbridgeInstalled) colSignalOk else colBrass
+        )
     }
 
     private fun requestNeededPermissions() {

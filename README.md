@@ -50,10 +50,14 @@ Huawei Band 6 tidak mendukung instalasi aplikasi pihak ketiga secara langsung di
 * Membaca notifikasi navigasi aktif dari **Google Maps** dan **Waze** secara otomatis (`⬅️`, `➡️`, `⬆️`, `↩️`, `🔄`, `🏁`).
 * Dilengkapi fitur *Smart Anti-Spam Cooldown*: gelang **hanya bergetar** ketika instruksi belokan berubah, menyentuh jarak kritis (`200m`, `150m`, `100m`, `50m`, `30m`, `15m`), atau saat kecepatan kendaraan Anda melewati batas aman (`80 km/jam`).
 
-### 3. Studio Custom Watch Face Terintegrasi (`194×368` Piksel)
-Di dalam aplikasi Android tersedia fitur **Studio Custom Watch Face** dengan 2 metode pemasangan ke Huawei Band 6:
-* **Metode A (Resmi Tanpa Mod via Huawei Health Gallery):** Menyimpan gambar `194×368` bertema **Retro Car Race LCD** (lengkap dengan cetakan data rekor kecepatan maksimum `MAX km/j`, odometer `ODO km`, dan ketinggian `ALT m` dari perjalanan Anda) langsung ke Galeri HP.
-* **Metode B (File `.HWT` Biner Penuh `HWHD07`):** Mengekspor file `CarRace_GD6_Band6.hwt` langsung ke folder `Download` HP untuk dipasang menggunakan **Gadgetbridge** atau **Huawei Health Mod**.
+### 3. Studio Custom Watch Face (`194×368` Piksel) & Integrasi Langsung **HookUtils v1.2.7_p2**
+Di dalam aplikasi Android tersedia fitur **HWHD07 Watch Face Studio** yang telah terintegrasi penuh dengan modul **`HookUtils-1.2.7_p2-20240602-R.apk` (`cn.wwl.xposed.hook`)** serta **On-Device `.HWT` Binary Compiler (`HwtCompiler.kt`)**:
+* **Metode A — Direct Install `.HWT` via HookUtils / Huawei Health / Gadgetbridge:**
+  * Mengompilasi **ke-4 tema HUD** (`01 / Car Race LCD`, `02 / Garmin Tactical`, `03 / Cyber Telemetry`, `04 / NightOps Radar`) secara *on-the-fly* di HP Anda menjadi file biner `.hwt` berformat `HWHD07` (`v2.1.1` RLE BGRA + `model.pb`) lengkap dengan data telemetri GPS terakhir Anda.
+  * Menyimpan file `.hwt` ke `/sdcard/Download/`, menyalin lokasinya ke *Clipboard*, dan langsung membuka **Huawei Health** (dengan injeksi WebView HookUtils) atau **Gadgetbridge** untuk dipasang langsung ke Huawei Band 6!
+  * APK **Band 6 GPS HUD** ini juga sudah menanamkan modul Xposed/LSPosed/LSPatch **HookUtils v1.2.7_p2** (`MainHook` + `libdexkit.so` + `code.js`) di dalamnya, serta menyertakan tombol **1-Tap Install/Open HookUtils v1.2.7_p2** mandiri.
+* **Metode B — Resmi Tanpa Mod via Huawei Health Gallery:**
+  * Menyimpan gambar `194×368` bertema **Retro Car Race LCD** (lengkap dengan cetakan data rekor kecepatan maksimum `MAX km/j`, odometer `ODO km`, dan ketinggian `ALT m` dari perjalanan Anda) langsung ke Galeri HP.
 
 ---
 
